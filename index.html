@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFB6C1">
+    <title>祢豆子的百日减重计划</title>
+    <link rel="apple-touch-icon" href="images/nezuko-avatar.jpg">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --primary: #FF8FA3;
+            --primary-dark: #FF6B8A;
+            --primary-light: #FFB6C1;
+            --primary-lighter: #FFE4E9;
+            --primary-soft: #FFF0F3;
+            --accent: #FF69B4;
+            --text: #4A2C3A;
+            --text-light: #8B6B7D;
+            --bg: #FFF5F7;
+            --card-bg: rgba(255,255,255,0.92);
+            --shadow: 0 4px 20px rgba(255,143,163,0.15);
+            --shadow-lg: 0 8px 32px rgba(255,143,163,0.25);
+            --radius: 20px;
+            --radius-sm: 14px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #FFF0F3 0%, #FFE4E9 50%, #FFF5F7 100%);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        /* 背景装饰 */
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,182,193,0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255,143,163,0.1) 0%, transparent 40%);
+        }
+        .bg-pattern::before {
+            content: ''; position: absolute; top: -50px; right: -50px;
+            width: 200px; height: 200px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80" opacity="0.03">&#127800;</text></svg>') no-repeat center;
+            background-size: contain;
+        }
+        /* 侧边栏 */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 280px; height: 100vh;
+            background: linear-gradient(180deg, #FFF0F3 0%, #FFE4E9 100%);
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+            overflow-y: auto;
+            border-right: 2px solid var(--primary-light);
+        }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-header {
+            padding: 30px 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--primary-lighter);
+        }
+        .sidebar-avatar {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+        .sidebar-title {
+            font-size: 18px; font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+        }
+        .sidebar-subtitle {
+            font-size: 12px; color: var(--text-light);
+        }
+        .nav-list { padding: 15px 0; }
+        .nav-item {
+            display: flex; align-items: center;
+            padding: 14px 24px;
+            margin: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px; font-weight: 500;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-lighter));
+            color: var(--primary-dark);
+            transform: translateX(4px);
+        }
+        .nav-icon {
+            width: 28px; height: 28px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 14px; font-size: 14px;
+            color: white;
+        }
+        .sidebar-close {
+            position: absolute; top: 16px; right: 16px;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: var(--primary-lighter);
+            border: none; font-size: 18px;
+            color: var(--primary-dark);
+            cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+        }
+        /* 遮罩层 */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(74,44,58,0.3);
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s; z-index: 999;
+            backdrop-filter: blur(3px);
+        }
+        .overlay.show { opacity: 1; visibility: visible; }
+        /* 主内容区 */
+        .main-content {
+            position: relative; z-index: 1;
+            min-height: 100vh;
+            transition: transform 0.35s;
+        }
+        .main-content.shift { transform: translateX(280px); }
+        /* 顶部栏 */
+        .top-bar {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            position: sticky; top: 0;
+            background: rgba(255,240,243,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        .menu-btn {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none; color: white;
+            font-size: 18px; cursor: pointer;
+            display: flex; align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+        .page-title {
+            font-size: 17px; font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .top-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-light);
+            object-fit: cover;
+        }
+        /* 页面内容 */
+        .page { display: none; padding: 16px; padding-bottom: 100px; }
+        .page.active { display: block; }
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,182,193,0.2);
+        }
+        .card-title {
+            font-size: 16px; font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 14px;
+            display: flex; align-items: center;
+            gap: 8px;
+        }
+        .card-title .icon {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex; align-items: center;
+            justify-content: center;
+            font-size: 14px; color: white;
+        }
+        /* 目标体重展示 */
+        .goal-display {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: var(--radius);
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        .goal-display::before {
+            content: ''; position: absolute;
+            top: -30px; right: -30px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        .goal-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+        .goal-number {
+            font-size: 56px; font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .goal-unit { font-size: 20px; font-weight: 600; }
+        .goal-days {
+            margin-top: 10px;
+            font-size: 13px;
+            opacity: 0.85;
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+        /* 数据对比 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-box {
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,182,193,0.2);
+        }
+        .stat-label {
+            font-size: 12px; color: var(--text-light);
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            font-size: 28px; font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .stat-change {
+            font-size: 12px; margin-top: 4px;
+            font-weight: 600;
+        }
+        .stat-change.down { color: #4CAF50; }
+        .stat-change.up { color: #FF5722; }
+        /* 输入框 */
+        .input-group {
+            display: flex; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .input-field {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid var(--primary-lighter);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            background: white;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: var(--primary); }
+        .btn {
+            padding: 14px 24px;
+            border: none; border-radius: var(--radius-sm);
+            font-size: 15px; font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow);
+        }
+        .btn-primary:active { transform: scale(0.96); }
+        .btn-secondary {
+            background: var(--primary-lighter);
+            color: var(--primary-dark);
+        }
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 10px;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            color: white;
+        }
+        /* 体重记录列表 */
+        .weight-list { max-height: 300px; overflow-y: auto; }
+        .weight-item {
+            display: flex; justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--primary-soft);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        .weight-date { font-size: 13px; color: var(--text-light); }
+        .weight-val { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+        .weight-edit {
+            background: none; border: none;
+            color: var(--primary); font-size: 13px;
+            cursor: pointer;
+        }
+        /* 任务列表 */
+        .task-item {
+            display: flex; align-items: center;
+            padding: 14px 16px;
+            background: var(--primary-soft);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .task-item.done { opacity: 0.5; }
+        .task-item.done .task-text { text-decoration: line-through; }
+        .task-checkbox {
+            width: 24px; height: 24px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            margin-right: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: white;
+            transition: all 0.2s;
+        }
+        .task-checkbox.checked {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: var(--primary-dark);
+        }
+        .task-checkbox.checked::after {
+            content: '✓'; color: white;
+            font-size: 14px; font-weight: 700;
+        }
+        .task-text { flex: 1; font-size: 15px; }
+        .task-delete {
+            background: none; border: none;
+            color: #FF6B6B; font-size: 18px;
+            cursor: pointer; padding: 4px;
+        }
+        /* 收藏模块 */
+        .fav-section { margin-bottom: 20px; }
+        .fav-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px;
+        }
+        .fav-title {
+            font-size: 15px; font-weight: 700;
+            color: var(--primary-dark);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .fav-badge {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge-xhs { background: #FF2442; color: white; }
+        .badge-douyin { background: #000; color: #00F2EA; }
+        .fav-item {
+            display: flex; align-items: center;
+            padding: 12px;
+            background: var(--primary-soft);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .fav-link {
+            flex: 1; font-size: 14px;
+            color: var(--text);
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .fav-actions { display: flex; gap: 6px; }
+        .fav-btn {
+            padding: 6px 12px; border: none;
+            border-radius: 8px; font-size: 12px;
+            cursor: pointer; font-weight: 600;
+        }
+        .fav-btn.copy {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        .fav-btn.del {
+            background: #FFE4E9;
+            color: #FF6B6B;
+        }
+        /* 日历 */
+        .calendar-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 16px;
+        }
+        .calendar-nav {
+            display: flex; gap: 8px;
+        }
+        .cal-nav-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary-lighter);
+            color: var(--primary-dark);
+            font-size: 16px; cursor: pointer;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .cal-weekday {
+            font-size: 12px; color: var(--text-light);
+            padding: 8px 0; font-weight: 600;
+        }
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-radius: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .cal-day:hover { background: var(--primary-lighter); }
+        .cal-day.other { color: #ccc; }
+        .cal-day.today {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-weight: 700;
+            box-shadow: var(--shadow);
+        }
+        .cal-day.has-event::after {
+            content: ''; position: absolute;
+            bottom: 4px; width: 4px; height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+        .cal-day.today.has-event::after { background: white; }
+        .event-list { margin-top: 16px; }
+        .event-item {
+            display: flex; align-items: center;
+            padding: 12px;
+            background: var(--primary-soft);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .event-time {
+            width: 60px; font-size: 13px;
+            font-weight: 700; color: var(--primary-dark);
+        }
+        .event-info { flex: 1; }
+        .event-name { font-size: 14px; font-weight: 600; }
+        .event-note { font-size: 12px; color: var(--text-light); }
+        /* 电子衣橱 */
+        .wardrobe-tabs {
+            display: flex; gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+        .w-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid var(--primary-lighter);
+            background: white;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+        .w-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary);
+        }
+        .w-panel { display: none; }
+        .w-panel.active { display: block; }
+        /* 三视图 */
+        .body-view {
+            display: flex; justify-content: center;
+            gap: 8px; margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .body-view-img {
+            width: 100px; height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid var(--primary-light);
+        }
+        /* 维度卡片 */
+        .dims-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .dim-card {
+            background: var(--primary-soft);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+        .dim-label {
+            font-size: 12px; color: var(--text-light);
+            margin-bottom: 4px;
+        }
+        .dim-value {
+            font-size: 22px; font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .dim-unit { font-size: 13px; }
+        /* 衣物管理 */
+        .clothes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .cloth-item {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background: var(--primary-soft);
+            display: flex; align-items: center;
+            justify-content: center;
+        }
+        .cloth-item img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .cloth-del {
+            position: absolute; top: 4px; right: 4px;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            background: rgba(255,107,107,0.9);
+            color: white; border: none;
+            font-size: 14px; cursor: pointer;
+            display: flex; align-items: center;
+            justify-content: center;
+        }
+        .cloth-add {
+            border: 2px dashed var(--primary-light);
+            background: var(--primary-soft);
+            cursor: pointer;
+            font-size: 28px; color: var(--primary);
+        }
+        /* 穿搭推荐 */
+        .outfit-rec {
+            background: linear-gradient(135deg, var(--primary-soft), var(--primary-lighter));
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .outfit-header {
+            display: flex; align-items: center;
+            gap: 10px; margin-bottom: 12px;
+        }
+        .weather-info {
+            display: flex; gap: 16px;
+            margin-bottom: 12px;
+        }
+        .weather-item {
+            text-align: center;
+        }
+        .weather-val {
+            font-size: 20px; font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .lucky-color {
+            display: inline-flex; align-items: center;
+            gap: 6px; padding: 6px 14px;
+            background: white;
+            border-radius: 20px;
+            font-size: 13px; font-weight: 600;
+        }
+        .color-dot {
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px #ddd;
+        }
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0;
+            right: 0; bottom: 0;
+            background: rgba(74,44,58,0.5);
+            display: flex; align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s;
+            padding: 20px;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal {
+            background: white;
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%; max-width: 360px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-overlay.show .modal { transform: scale(1); }
+        .modal-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+        .modal-title {
+            font-size: 18px; font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .modal-close {
+            background: none; border: none;
+            font-size: 24px; color: var(--text-light);
+            cursor: pointer;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block; font-size: 13px;
+            font-weight: 600; color: var(--text-light);
+            margin-bottom: 6px;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px 14px;
+            border: 2px solid var(--primary-lighter);
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            color: var(--text);
+            outline: none;
+            font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+        }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .modal-actions {
+            display: flex; gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-actions .btn { flex: 1; }
+        /* 喝水提醒弹窗 */
+        .water-modal .modal {
+            text-align: center;
+            background: linear-gradient(180deg, #FFF0F3 0%, white 100%);
+            border: 2px solid var(--primary-light);
+        }
+        .water-avatar {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            object-fit: cover;
+            margin: 0 auto 16px;
+            box-shadow: var(--shadow);
+        }
+        .water-title {
+            font-size: 22px; font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .water-msg {
+            font-size: 14px; color: var(--text-light);
+            margin-bottom: 20px; line-height: 1.6;
+        }
+        /* 智能推荐 */
+        .recommend-section {
+            background: linear-gradient(135deg, var(--primary-soft), #FFF8E7);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .rec-title {
+            font-size: 15px; font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex; align-items: center;
+            gap: 6px;
+        }
+        .rec-item {
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .rec-item strong {
+            color: var(--primary-dark);
+        }
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .float { animation: float 3s ease-in-out infinite; }
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .empty-state .icon {
+            font-size: 48px; margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        /* 响应式 */
+        @media (max-width: 430px) {
+            .goal-number { font-size: 48px; }
+            .stat-value { font-size: 24px; }
+            .body-view-img { width: 85px; height: 240px; }
+        }
+        /* 底部安全区域 */
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <!-- 遮罩层 -->
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
+        <div class="sidebar-header">
+            <img src="images/nezuko-avatar.jpg" alt="祢豆子" class="sidebar-avatar float">
+            <div class="sidebar-title">祢豆子的减重计划</div>
+            <div class="sidebar-subtitle">百日坚持，遇见更好的自己</div>
+        </div>
+        <nav class="nav-list">
+            <div class="nav-item active" data-page="home" onclick="navigateTo('home')">
+                <div class="nav-icon">&#127775;</div>
+                <span>百日打卡</span>
+            </div>
+            <div class="nav-item" data-page="tasks" onclick="navigateTo('tasks')">
+                <div class="nav-icon">&#9989;</div>
+                <span>每日任务</span>
+            </div>
+            <div class="nav-item" data-page="favorites" onclick="navigateTo('favorites')">
+                <div class="nav-icon">&#128150;</div>
+                <span>收藏资源</span>
+            </div>
+            <div class="nav-item" data-page="calendar" onclick="navigateTo('calendar')">
+                <div class="nav-icon">&#128197;</div>
+                <span>日程日历</span>
+            </div>
+            <div class="nav-item" data-page="wardrobe" onclick="navigateTo('wardrobe')">
+                <div class="nav-icon">&#128087;</div>
+                <span>电子衣橱</span>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- 主内容 -->
+    <div class="main-content" id="mainContent">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <button class="menu-btn" onclick="openSidebar()">&#9776;</button>
+            <div class="page-title" id="pageTitle">百日减重打卡</div>
+            <img src="images/nezuko-avatar.jpg" alt="头像" class="top-avatar">
+        </div>
+
+        <!-- 首页：百日打卡 -->
+        <div class="page active" id="page-home">
+            <div class="goal-display animate-in">
+                <div class="goal-label">&#127800; 目标体重</div>
+                <div class="goal-number"><span id="goalWeight">50</span><span class="goal-unit"> kg</span></div>
+                <div class="goal-days" id="goalDays">第 1 天 / 百日计划</div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-label">初始体重</div>
+                    <div class="stat-value" id="startWeight">--</div>
+                    <div class="stat-change">起点</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">当日体重</div>
+                    <div class="stat-value" id="currentWeight">--</div>
+                    <div class="stat-change down" id="weightChange">--</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#128203;</div>
+                    今日体重录入
+                </div>
+                <div class="input-group">
+                    <input type="number" class="input-field" id="weightInput" placeholder="输入今日体重 (kg)" step="0.1">
+                    <button class="btn btn-primary" onclick="saveWeight()">打卡</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#128220;</div>
+                    打卡记录
+                </div>
+                <div class="weight-list" id="weightList">
+                    <div class="empty-state">
+                        <div class="icon">&#128211;</div>
+                        <p>还没有打卡记录哦~</p>
+                        <p style="font-size:12px;margin-top:4px;">坚持每日记录，见证蜕变！</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#9889;</div>
+                    智能推荐
+                </div>
+                <div id="smartRec">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">&#128161;</div>
+                        <p>录入体重后即可查看智能推荐</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每日任务页 -->
+        <div class="page" id="page-tasks">
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#10133;</div>
+                    添加任务
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field" id="taskInput" placeholder="输入今日减重任务...">
+                    <button class="btn btn-primary" onclick="addTask()">添加</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#128221;</div>
+                    今日任务清单
+                </div>
+                <div id="taskList">
+                    <div class="empty-state">
+                        <div class="icon">&#127804;</div>
+                        <p>今天还没有任务</p>
+                        <p style="font-size:12px;margin-top:4px;">添加任务，开始美好的一天~</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommend-section" id="taskRec" style="display:none;">
+                <div class="rec-title">&#127942; 今日智能推荐</div>
+                <div id="taskRecContent"></div>
+            </div>
+        </div>
+
+        <!-- 收藏资源页 -->
+        <div class="page" id="page-favorites">
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#10133;</div>
+                    添加收藏
+                </div>
+                <div class="input-group">
+                    <select class="form-select" id="favType" style="width:100px;flex-shrink:0;">
+                        <option value="xhs">小红书</option>
+                        <option value="douyin">抖音</option>
+                    </select>
+                    <select class="form-select" id="favCategory" style="width:100px;flex-shrink:0;">
+                        <option value="exercise">运动</option>
+                        <option value="recipe">食谱</option>
+                    </select>
+                    <input type="text" class="input-field" id="favName" placeholder="名称">
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field" id="favUrl" placeholder="粘贴链接地址...">
+                    <button class="btn btn-primary" onclick="addFavorite()">收藏</button>
+                </div>
+            </div>
+
+            <div class="fav-section">
+                <div class="fav-header">
+                    <div class="fav-title">&#127947; 收藏运动视频</div>
+                </div>
+                <div id="favExercise"></div>
+            </div>
+
+            <div class="fav-section">
+                <div class="fav-header">
+                    <div class="fav-title">&#129379; 收藏减重食谱</div>
+                </div>
+                <div id="favRecipe"></div>
+            </div>
+        </div>
+
+        <!-- 日程日历页 -->
+        <div class="page" id="page-calendar">
+            <div class="card">
+                <div class="calendar-header">
+                    <div style="font-size:16px;font-weight:700;color:var(--primary-dark);" id="calMonth"></div>
+                    <div class="calendar-nav">
+                        <button class="cal-nav-btn" onclick="changeMonth(-1)">&#9664;</button>
+                        <button class="cal-nav-btn" onclick="changeMonth(1)">&#9654;</button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="icon">&#128198;</div>
+                    <span id="selectedDate">日程详情</span>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field" id="eventName" placeholder="日程名称">
+                    <input type="time" class="input-field" id="eventTime" style="width:100px;flex-shrink:0;">
+                </div>
+                <div class="input-group">
+                    <input type="text" class="input-field" id="eventNote" placeholder="备注（可选）">
+                    <button class="btn btn-primary" onclick="addEvent()">添加</button>
+                </div>
+                <div class="event-list" id="eventList">
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="icon">&#128197;</div>
+                        <p>选择日期查看或添加日程</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 电子衣橱页 -->
+        <div class="page" id="page-wardrobe">
+            <div class="wardrobe-tabs">
+                <div class="w-tab active" onclick="switchWardrobeTab('outfit')">&#128087; 穿搭推荐</div>
+                <div class="w-tab" onclick="switchWardrobeTab('body')">&#128100; 我的维度</div>
+                <div class="w-tab" onclick="switchWardrobeTab('clothes')">&#128090; 衣物管理</div>
+            </div>
+
+            <!-- 穿搭推荐 -->
+            <div class="w-panel active" id="w-outfit">
+                <div class="outfit-rec">
+                    <div class="outfit-header">
+                        <span style="font-size:15px;font-weight:700;color:var(--primary-dark);">&#127780; 今日天气</span>
+                        <button class="btn btn-small btn-secondary" onclick="fetchWeather()">&#128260; 刷新</button>
+                    </div>
+                    <div class="weather-info">
+                        <div class="weather-item">
+                            <div class="weather-val" id="weatherTemp">--&deg;C</div>
+                            <div style="font-size:11px;color:var(--text-light);">气温</div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-val" id="weatherCond">--</div>
+                            <div style="font-size:11px;color:var(--text-light);">天气</div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-val" id="weatherCity">--</div>
+                            <div style="font-size:11px;color:var(--text-light);">城市</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <span class="lucky-color">
+                            &#127912; 今日吉色: <span id="luckyColor">--</span>
+                        </span>
+                    </div>
+                    <div style="font-size:13px;color:var(--text-light);" id="outfitAdvice">
+                        点击刷新获取天气和穿搭推荐
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <div class="icon">&#128100;</div>
+                        模拟穿搭效果
+                    </div>
+                    <div class="body-view" id="outfitPreview">
+                        <img src="images/body-view.png" alt="正面" class="body-view-img" id="bodyFront">
+                        <img src="images/body-view.png" alt="侧面" class="body-view-img" id="bodySide">
+                        <img src="images/body-view.png" alt="背面" class="body-view-img" id="bodyBack">
+                    </div>
+                    <p style="font-size:12px;color:var(--text-light);text-align:center;">
+                        根据维度卡片数据调整身形展示
+                    </p>
+                </div>
+            </div>
+
+            <!-- 我的维度 -->
+            <div class="w-panel" id="w-body">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="icon">&#128100;</div>
+                        我的身体维度
+                    </div>
+                    <div class="dims-grid" id="dimsGrid"></div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="openDimEdit()">
+                        &#9998; 编辑维度
+                    </button>
+                </div>
+            </div>
+
+            <!-- 衣物管理 -->
+            <div class="w-panel" id="w-clothes">
+                <div class="card">
+                    <div class="card-title">
+                        <div class="icon">&#128090;</div>
+                        我的衣物
+                    </div>
+                    <div class="clothes-grid" id="clothesGrid">
+                        <div class="cloth-item cloth-add" onclick="document.getElementById('clothUpload').click()">
+                            +
+                        </div>
+                    </div>
+                    <input type="file" id="clothUpload" accept="image/*" style="display:none;" onchange="uploadCloth(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑体重弹窗 -->
+    <div class="modal-overlay" id="editWeightModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">&#9998; 编辑体重</div>
+                <button class="modal-close" onclick="closeModal('editWeightModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">日期</label>
+                <input type="date" class="form-input" id="editWeightDate">
+            </div>
+            <div class="form-group">
+                <label class="form-label">体重 (kg)</label>
+                <input type="number" class="form-input" id="editWeightValue" step="0.1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('editWeightModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveEditWeight()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑日程弹窗 -->
+    <div class="modal-overlay" id="editEventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">&#9998; 编辑日程</div>
+                <button class="modal-close" onclick="closeModal('editEventModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">日程名称</label>
+                <input type="text" class="form-input" id="editEventName">
+            </div>
+            <div class="form-group">
+                <label class="form-label">时间</label>
+                <input type="time" class="form-input" id="editEventTime">
+            </div>
+            <div class="form-group">
+                <label class="form-label">备注</label>
+                <input type="text" class="form-input" id="editEventNote">
+            </div>
+            <div class="form-group">
+                <label class="form-label">提醒设置</label>
+                <select class="form-select" id="editEventReminder">
+                    <option value="">不提醒</option>
+                    <option value="0">准时提醒</option>
+                    <option value="5">提前5分钟</option>
+                    <option value="10">提前10分钟</option>
+                    <option value="30">提前30分钟</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('editEventModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveEditEvent()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑维度弹窗 -->
+    <div class="modal-overlay" id="editDimModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">&#9998; 编辑身体维度</div>
+                <button class="modal-close" onclick="closeModal('editDimModal')">&times;</button>
+            </div>
+            <div id="dimEditForm"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('editDimModal')">取消</button>
+                <button class="btn btn-primary" onclick="saveDims()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 喝水提醒弹窗 -->
+    <div class="modal-overlay water-modal" id="waterModal">
+        <div class="modal">
+            <img src="images/nezuko-avatar.jpg" alt="祢豆子" class="water-avatar pulse">
+            <div class="water-title">&#128166; 该喝水啦！</div>
+            <div class="water-msg">
+                每天保持充足水分，对减重和健康都非常重要哦~<br>
+                祢豆子也在喝竹筒里的水呢！ &#127807;
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal('waterModal')">
+                知道啦，马上去喝 &#128150;
+            </button>
+        </div>
+    </div>
+
+    <!-- 日程提醒弹窗 -->
+    <div class="modal-overlay" id="eventReminderModal">
+        <div class="modal" style="text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">&#9200;</div>
+            <div class="modal-title" style="margin-bottom:10px;">日程提醒</div>
+            <div id="eventReminderContent" style="font-size:15px;color:var(--text);margin-bottom:20px;"></div>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeModal('eventReminderModal')">
+                我知道了
+            </button>
+        </div>
+    </div>
+
+    <script>
+    // ==================== 数据管理 ====================
+    const DataStore = {
+        get(key, def) {
+            try { return JSON.parse(localStorage.getItem('nezuko_' + key)) || def; }
+            catch(e) { return def; }
+        },
+        set(key, val) { localStorage.setItem('nezuko_' + key, JSON.stringify(val)); }
+    };
+
+    // 初始化数据
+    function initData() {
+        if (!DataStore.get('initialized', false)) {
+            DataStore.set('goalWeight', 50);
+            DataStore.set('startWeight', 60);
+            DataStore.set('weights', []);
+            DataStore.set('tasks', []);
+            DataStore.set('favorites', { exercise: [], recipe: [] });
+            DataStore.set('events', {});
+            DataStore.set('dimensions', {
+                height: 160, chest: 82, waist: 73, hip: 89,
+                upperArm: 28, lowerArm: 22.5, thigh: 50.5, calf: 33.5
+            });
+            DataStore.set('clothes', []);
+            DataStore.set('initialized', true);
+        }
+    }
+    initData();
+
+    // ==================== 侧边栏导航 ====================
+    let currentPage = 'home';
+    const pageTitles = {
+        home: '百日减重打卡',
+        tasks: '每日任务',
+        favorites: '收藏资源',
+        calendar: '日程日历',
+        wardrobe: '电子衣橱'
+    };
+
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    }
+    function navigateTo(page) {
+        currentPage = page;
+        document.getElementById('pageTitle').textContent = pageTitles[page];
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
+        closeSidebar();
+        // 刷新页面数据
+        if (page === 'home') renderHome();
+        if (page === 'tasks') renderTasks();
+        if (page === 'favorites') renderFavorites();
+        if (page === 'calendar') renderCalendar();
+        if (page === 'wardrobe') renderWardrobe();
+    }
+
+    // ==================== 百日打卡 ====================
+    function renderHome() {
+        const goal = DataStore.get('goalWeight', 50);
+        const start = DataStore.get('startWeight', 60);
+        const weights = DataStore.get('weights', []);
+        document.getElementById('goalWeight').textContent = goal;
+
+        // 计算第几天
+        const startDate = DataStore.get('startDate');
+        let dayNum = 1;
+        if (startDate) {
+            const diff = Math.floor((new Date() - new Date(startDate)) / (1000*60*60*24));
+            dayNum = Math.max(1, Math.min(diff + 1, 100));
+        } else {
+            DataStore.set('startDate', new Date().toISOString().split('T')[0]);
+        }
+        document.getElementById('goalDays').textContent = `第 ${dayNum} 天 / 百日计划`;
+
+        document.getElementById('startWeight').textContent = start + ' kg';
+
+        if (weights.length > 0) {
+            const latest = weights[weights.length - 1];
+            document.getElementById('currentWeight').textContent = latest.weight + ' kg';
+            const change = (latest.weight - start).toFixed(1);
+            const el = document.getElementById('weightChange');
+            if (change < 0) {
+                el.textContent = '↓ ' + Math.abs(change) + ' kg';
+                el.className = 'stat-change down';
+            } else {
+                el.textContent = '↑ ' + change + ' kg';
+                el.className = 'stat-change up';
+            }
+        } else {
+            document.getElementById('currentWeight').textContent = '--';
+            document.getElementById('weightChange').textContent = '--';
+        }
+
+        // 渲染记录列表
+        const listEl = document.getElementById('weightList');
+        if (weights.length === 0) {
+            listEl.innerHTML = `<div class="empty-state"><div class="icon">&#128211;</div><p>还没有打卡记录哦~</p><p style="font-size:12px;margin-top:4px;">坚持每日记录，见证蜕变！</p></div>`;
+        } else {
+            listEl.innerHTML = weights.slice().reverse().map((w, i) => `
+                <div class="weight-item">
+                    <div><div class="weight-date">${w.date}</div></div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div class="weight-val">${w.weight} kg</div>
+                        <button class="weight-edit" onclick="openEditWeight('${w.date}', ${w.weight})">编辑</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 智能推荐
+        renderSmartRec(weights);
+    }
+
+    function saveWeight() {
+        const input = document.getElementById('weightInput');
+        const val = parseFloat(input.value);
+        if (!val || val <= 0) { alert('请输入有效的体重数值'); return; }
+        const date = new Date().toISOString().split('T')[0];
+        let weights = DataStore.get('weights', []);
+        const idx = weights.findIndex(w => w.date === date);
+        if (idx >= 0) weights[idx].weight = val;
+        else weights.push({ date, weight: val });
+        DataStore.set('weights', weights);
+        input.value = '';
+        renderHome();
+    }
+
+    let editWeightDate = '';
+    function openEditWeight(date, weight) {
+        editWeightDate = date;
+        document.getElementById('editWeightDate').value = date;
+        document.getElementById('editWeightValue').value = weight;
+        openModal('editWeightModal');
+    }
+    function saveEditWeight() {
+        const date = document.getElementById('editWeightDate').value;
+        const val = parseFloat(document.getElementById('editWeightValue').value);
+        if (!date || !val) return;
+        let weights = DataStore.get('weights', []);
+        const idx = weights.findIndex(w => w.date === editWeightDate);
+        if (idx >= 0) {
+            weights[idx].date = date;
+            weights[idx].weight = val;
+            DataStore.set('weights', weights);
+        }
+        closeModal('editWeightModal');
+        renderHome();
+    }
+
+    function renderSmartRec(weights) {
+        const el = document.getElementById('smartRec');
+        if (weights.length < 2) {
+            el.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="icon">&#128161;</div><p>录入体重后即可查看智能推荐</p></div>`;
+            return;
+        }
+        const latest = weights[weights.length - 1];
+        const prev = weights[weights.length - 2];
+        const diff = latest.weight - prev.weight;
+        let recs = [];
+        if (diff < 0) {
+            recs.push('<strong>&#127881; 太棒了！</strong> 体重下降 ' + Math.abs(diff).toFixed(1) + ' kg，继续保持！');
+            recs.push('<strong>&#127947; 运动建议：</strong> 可适当增加有氧运动量，推荐快走40分钟（配速 6-7 min/km）或跳操30分钟');
+            recs.push('<strong>&#129379; 饮食建议：</strong> 保持现有饮食结构，可适当增加蛋白质摄入');
+        } else if (diff > 0) {
+            recs.push('<strong>&#128170; 加油！</strong> 体重上升 ' + diff.toFixed(1) + ' kg，别灰心，调整一下节奏！');
+            recs.push('<strong>&#127947; 运动建议：</strong> 增加有氧训练，推荐跳操45分钟或快走60分钟（配速 7-8 min/km）');
+            recs.push('<strong>&#129379; 饮食建议：</strong> 适当减少碳水摄入，增加蔬菜比例，控制晚餐热量');
+        } else {
+            recs.push('<strong>&#127800; 保持平稳</strong>，体重没有变化');
+            recs.push('<strong>&#127947; 运动建议：</strong> 尝试加入无氧训练，小哑铃或壶铃居家锻炼20分钟');
+        }
+        // 热量计算
+        const bmr = 1200; // 基础代谢估算
+        const activity = 300; // 活动消耗
+        const targetDeficit = 500; // 目标缺口
+        recs.push(`<strong>&#128293; 热量建议：</strong> 今日建议摄入 ${Math.round(bmr + activity - targetDeficit)} kcal，保持 ${targetDeficit} kcal 热量缺口`);
+
+        el.innerHTML = recs.map(r => `<div class="rec-item">${r}</div>`).join('');
+    }
+
+    // ==================== 每日任务 ====================
+    function renderTasks() {
+        const tasks = DataStore.get('tasks', []);
+        const listEl = document.getElementById('taskList');
+        if (tasks.length === 0) {
+            listEl.innerHTML = `<div class="empty-state"><div class="icon">&#127804;</div><p>今天还没有任务</p><p style="font-size:12px;margin-top:4px;">添加任务，开始美好的一天~</p></div>`;
+        } else {
+            listEl.innerHTML = tasks.map((t, i) => `
+                <div class="task-item ${t.done ? 'done' : ''}">
+                    <div class="task-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${i})"></div>
+                    <div class="task-text">${t.text}</div>
+                    <button class="task-delete" onclick="deleteTask(${i})">&#128465;</button>
+                </div>
+            `).join('');
+        }
+
+        // 智能推荐（基于体重变化）
+        const weights = DataStore.get('weights', []);
+        const recEl = document.getElementById('taskRec');
+        if (weights.length >= 2) {
+            recEl.style.display = 'block';
+            const latest = weights[weights.length-1];
+            const prev = weights[weights.length-2];
+            const diff = latest.weight - prev.weight;
+            let content = '';
+            if (diff < 0) {
+                content += `<div class="rec-item"><strong>&#127947; 有氧运动：</strong>快走40分钟（配速6-7min/km），推荐跟练：帕梅拉15分钟快乐舞蹈</div>`;
+                content += `<div class="rec-item"><strong>&#127947; 无氧运动：</strong>小哑铃手臂训练15分钟 + 壶铃深蹲3组x12次</div>`;
+                content += `<div class="rec-item"><strong>&#129379; 饮食推荐：</strong>早餐：燕麦+鸡蛋；午餐：鸡胸肉沙拉；晚餐：清蒸鱼+蔬菜</div>`;
+            } else {
+                content += `<div class="rec-item"><strong>&#127947; 有氧运动：</strong>跳操45分钟或快走60分钟（配速7-8min/km）</div>`;
+                content += `<div class="rec-item"><strong>&#127947; 无氧运动：</strong>全身HIIT训练20分钟 + 平板支撑3组</div>`;
+                content += `<div class="rec-item"><strong>&#129379; 饮食推荐：</strong>控制碳水，早餐：全麦面包+牛奶；午餐：牛肉+大量蔬菜；晚餐：豆腐汤</div>`;
+            }
+            document.getElementById('taskRecContent').innerHTML = content;
+        } else {
+            recEl.style.display = 'none';
+        }
+    }
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        const text = input.value.trim();
+        if (!text) return;
+        const tasks = DataStore.get('tasks', []);
+        tasks.push({ text, done: false });
+        DataStore.set('tasks', tasks);
+        input.value = '';
+        renderTasks();
+    }
+    function toggleTask(idx) {
+        const tasks = DataStore.get('tasks', []);
+        tasks[idx].done = !tasks[idx].done;
+        DataStore.set('tasks', tasks);
+        renderTasks();
+    }
+    function deleteTask(idx) {
+        const tasks = DataStore.get('tasks', []);
+        tasks.splice(idx, 1);
+        DataStore.set('tasks', tasks);
+        renderTasks();
+    }
+
+    // ==================== 收藏资源 ====================
+    function renderFavorites() {
+        const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
+        const exEl = document.getElementById('favExercise');
+        const reEl = document.getElementById('favRecipe');
+
+        function renderList(list, el) {
+            if (list.length === 0) {
+                el.innerHTML = `<div class="empty-state" style="padding:20px;"><p style="font-size:13px;">暂无收藏</p></div>`;
+                return;
+            }
+            el.innerHTML = list.map((f, i) => `
+                <div class="fav-item">
+                    <span class="fav-badge ${f.type === 'xhs' ? 'badge-xhs' : 'badge-douyin'}">${f.type === 'xhs' ? '小红书' : '抖音'}</span>
+                    <a href="${f.url}" target="_blank" class="fav-link">${f.name}</a>
+                    <div class="fav-actions">
+                        <button class="fav-btn copy" onclick="copyLink('${f.url}')">复制</button>
+                        <button class="fav-btn del" onclick="deleteFav('${f.category}', ${i})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        renderList(favs.exercise, exEl);
+        renderList(favs.recipe, reEl);
+    }
+    function addFavorite() {
+        const type = document.getElementById('favType').value;
+        const category = document.getElementById('favCategory').value;
+        const name = document.getElementById('favName').value.trim();
+        const url = document.getElementById('favUrl').value.trim();
+        if (!name || !url) { alert('请填写名称和链接'); return; }
+        const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
+        favs[category].push({ type, name, url });
+        DataStore.set('favorites', favs);
+        document.getElementById('favName').value = '';
+        document.getElementById('favUrl').value = '';
+        renderFavorites();
+    }
+    function deleteFav(category, idx) {
+        const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
+        favs[category].splice(idx, 1);
+        DataStore.set('favorites', favs);
+        renderFavorites();
+    }
+    function copyLink(url) {
+        navigator.clipboard.writeText(url).then(() => alert('链接已复制到剪贴板'));
+    }
+
+    // ==================== 日程日历 ====================
+    let calCurrent = new Date();
+    let calSelected = new Date().toISOString().split('T')[0];
+
+    function renderCalendar() {
+        const year = calCurrent.getFullYear();
+        const month = calCurrent.getMonth();
+        document.getElementById('calMonth').textContent = `${year}年${month+1}月`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month+1, 0).getDate();
+        const daysPrev = new Date(year, month, 0).getDate();
+        const events = DataStore.get('events', {});
+
+        let html = '';
+        const weekdays = ['日','一','二','三','四','五','六'];
+        weekdays.forEach(d => html += `<div class="cal-weekday">${d}</div>`);
+
+        for (let i = firstDay - 1; i >= 0; i--) {
+            html += `<div class="cal-day other">${daysPrev - i}</div>`;
+        }
+        const today = new Date().toISOString().split('T')[0];
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = dateStr === today;
+            const hasEvent = events[dateStr] && events[dateStr].length > 0;
+            const isSelected = dateStr === calSelected;
+            html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isSelected ? 'selected' : ''}" onclick="selectDate('${dateStr}')" style="${isSelected ? 'background:var(--primary-lighter);font-weight:700;' : ''}">${d}</div>`;
+        }
+        document.getElementById('calendarGrid').innerHTML = html;
+        renderEventList();
+    }
+    function changeMonth(delta) {
+        calCurrent.setMonth(calCurrent.getMonth() + delta);
+        renderCalendar();
+    }
+    function selectDate(date) {
+        calSelected = date;
+        renderCalendar();
+        renderEventList();
+    }
+    function renderEventList() {
+        document.getElementById('selectedDate').textContent = calSelected + ' 日程';
+        const events = DataStore.get('events', {});
+        const list = events[calSelected] || [];
+        const el = document.getElementById('eventList');
+        if (list.length === 0) {
+            el.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="icon">&#128197;</div><p>暂无日程</p></div>`;
+        } else {
+            el.innerHTML = list.map((e, i) => `
+                <div class="event-item">
+                    <div class="event-time">${e.time || '--:--'}</div>
+                    <div class="event-info">
+                        <div class="event-name">${e.name}</div>
+                        ${e.note ? `<div class="event-note">${e.note}</div>` : ''}
+                    </div>
+                    <button class="fav-btn del" onclick="deleteEvent(${i})">删除</button>
+                </div>
+            `).join('');
+        }
+    }
+    function addEvent() {
+        const name = document.getElementById('eventName').value.trim();
+        const time = document.getElementById('eventTime').value;
+        const note = document.getElementById('eventNote').value.trim();
+        if (!name) { alert('请输入日程名称'); return; }
+        const events = DataStore.get('events', {});
+        if (!events[calSelected]) events[calSelected] = [];
+        events[calSelected].push({ name, time, note });
+        DataStore.set('events', events);
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventTime').value = '';
+        document.getElementById('eventNote').value = '';
+        renderCalendar();
+        renderEventList();
+    }
+    function deleteEvent(idx) {
+        const events = DataStore.get('events', {});
+        if (events[calSelected]) {
+            events[calSelected].splice(idx, 1);
+            DataStore.set('events', events);
+        }
+        renderCalendar();
+        renderEventList();
+    }
+
+    // ==================== 电子衣橱 ====================
+    function switchWardrobeTab(tab) {
+        document.querySelectorAll('.w-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.w-panel').forEach(p => p.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('w-' + tab).classList.add('active');
+    }
+    function renderWardrobe() {
+        renderDims();
+        renderClothes();
+    }
+    function renderDims() {
+        const dims = DataStore.get('dimensions', {});
+        const labels = {
+            height: '身高', chest: '胸围', waist: '腰围', hip: '臀围',
+            upperArm: '上臂', lowerArm: '下臂', thigh: '大腿', calf: '小腿'
+        };
+        const el = document.getElementById('dimsGrid');
+        el.innerHTML = Object.entries(dims).map(([k, v]) => `
+            <div class="dim-card">
+                <div class="dim-label">${labels[k]}</div>
+                <div class="dim-value">${v}<span class="dim-unit">cm</span></div>
+            </div>
+        `).join('');
+    }
+    function openDimEdit() {
+        const dims = DataStore.get('dimensions', {});
+        const labels = {
+            height: '身高', chest: '胸围', waist: '腰围', hip: '臀围',
+            upperArm: '上臂', lowerArm: '下臂', thigh: '大腿', calf: '小腿'
+        };
+        document.getElementById('dimEditForm').innerHTML = Object.entries(dims).map(([k, v]) => `
+            <div class="form-group">
+                <label class="form-label">${labels[k]} (cm)</label>
+                <input type="number" class="form-input dim-input" data-key="${k}" value="${v}" step="0.5">
+            </div>
+        `).join('');
+        openModal('editDimModal');
+    }
+    function saveDims() {
+        const dims = DataStore.get('dimensions', {});
+        document.querySelectorAll('.dim-input').forEach(input => {
+            dims[input.dataset.key] = parseFloat(input.value) || 0;
+        });
+        DataStore.set('dimensions', dims);
+        closeModal('editDimModal');
+        renderDims();
+        // 更新三视图（根据BMI调整透明度模拟身形变化）
+        updateBodyView();
+    }
+    function updateBodyView() {
+        const dims = DataStore.get('dimensions', {});
+        const bmi = dims.weight ? (dims.weight / ((dims.height/100)**2)) : 22;
+        const opacity = Math.min(1, Math.max(0.7, 1 - (bmi - 18) * 0.015));
+        document.querySelectorAll('.body-view-img').forEach(img => {
+            img.style.opacity = opacity;
+        });
+    }
+    function renderClothes() {
+        const clothes = DataStore.get('clothes', []);
+        const el = document.getElementById('clothesGrid');
+        let html = clothes.map((c, i) => `
+            <div class="cloth-item">
+                <img src="${c}" alt="衣物">
+                <button class="cloth-del" onclick="deleteCloth(${i})">&times;</button>
+            </div>
+        `).join('');
+        html += `<div class="cloth-item cloth-add" onclick="document.getElementById('clothUpload').click()">+</div>`;
+        el.innerHTML = html;
+    }
+    function uploadCloth(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const clothes = DataStore.get('clothes', []);
+            clothes.push(evt.target.result);
+            DataStore.set('clothes', clothes);
+            renderClothes();
+        };
+        reader.readAsDataURL(file);
+    }
+    function deleteCloth(idx) {
+        const clothes = DataStore.get('clothes', []);
+        clothes.splice(idx, 1);
+        DataStore.set('clothes', clothes);
+        renderClothes();
+    }
+
+    // 天气和穿搭
+    function fetchWeather() {
+        // 模拟天气获取（实际项目中可接入天气API）
+        const mockWeather = [
+            { temp: 28, cond: '晴', city: '上海' },
+            { temp: 25, cond: '多云', city: '上海' },
+            { temp: 22, cond: '小雨', city: '上海' },
+        ];
+        const w = mockWeather[Math.floor(Math.random() * mockWeather.length)];
+        document.getElementById('weatherTemp').innerHTML = w.temp + '&deg;C';
+        document.getElementById('weatherCond').textContent = w.cond;
+        document.getElementById('weatherCity').textContent = w.city;
+
+        // 五行吉色
+        const colors = [
+            { name: '粉色', hex: '#FFB6C1', advice: '粉色旺桃花，适合约会穿搭' },
+            { name: '红色', hex: '#FF6B6B', advice: '红色旺事业，活力满满的一天' },
+            { name: '白色', hex: '#F5F5F5', advice: '白色纯净清爽，百搭不出错' },
+            { name: '绿色', hex: '#90EE90', advice: '绿色生机勃勃，心情愉悦' },
+            { name: '黄色', hex: '#FFE4B5', advice: '黄色招财，财运亨通' },
+        ];
+        const lucky = colors[Math.floor(Math.random() * colors.length)];
+        document.getElementById('luckyColor').innerHTML = `<span class="color-dot" style="background:${lucky.hex}"></span>${lucky.name}`;
+
+        let advice = '';
+        if (w.temp >= 30) advice = '天气炎热，建议穿轻薄透气的短袖+短裤/短裙，注意防晒！';
+        else if (w.temp >= 25) advice = '天气较热，推荐短袖+薄长裤或连衣裙，舒适又清爽。';
+        else if (w.temp >= 20) advice = '温度宜人，可穿长袖T恤+牛仔裤，或薄外套搭配。';
+        else if (w.temp >= 15) advice = '天气微凉，建议穿薄毛衣+长裤，备一件外套。';
+        else advice = '天气较冷，注意保暖，建议穿厚外套+长裤。';
+        advice += `<br><strong>吉色推荐：</strong>${lucky.advice}`;
+        document.getElementById('outfitAdvice').innerHTML = advice;
+    }
+
+    // ==================== 喝水提醒 ====================
+    function checkWaterReminder() {
+        const now = new Date();
+        const hour = now.getHours();
+        if (hour >= 8 && hour <= 16) {
+            const lastCheck = DataStore.get('lastWaterCheck', '');
+            const todayHour = now.toISOString().split('T')[0] + '_' + hour;
+            if (lastCheck !== todayHour) {
+                DataStore.set('lastWaterCheck', todayHour);
+                openModal('waterModal');
+            }
+        }
+    }
+
+    // ==================== 日程提醒检查 ====================
+    function checkEventReminders() {
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        const events = DataStore.get('events', {});
+        const todayEvents = events[dateStr] || [];
+        todayEvents.forEach(e => {
+            if (e.time === timeStr) {
+                document.getElementById('eventReminderContent').innerHTML = `
+                    <strong>${e.name}</strong><br>
+                    ${e.note || '别忘了哦~'}
+                `;
+                openModal('eventReminderModal');
+            }
+        });
+    }
+
+    // ==================== 弹窗工具 ====================
+    function openModal(id) {
+        document.getElementById(id).classList.add('show');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+
+    // ==================== 初始化 ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        renderHome();
+        fetchWeather();
+        // 每分钟检查提醒
+        setInterval(() => {
+            checkWaterReminder();
+            checkEventReminders();
+        }, 60000);
+        // 首次检查
+        checkWaterReminder();
+        checkEventReminders();
+    });
+
+    // 滑动手势打开侧边栏
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.touches[0].clientX;
+    });
+    document.addEventListener('touchend', e => {
+        const diff = e.changedTouches[0].clientX - touchStartX;
+        if (diff > 80 && touchStartX < 50) openSidebar();
+        if (diff < -80) closeSidebar();
+    });
+    </script>
+</body>
+</html>
