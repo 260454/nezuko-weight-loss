@@ -741,10 +741,147 @@
         }
         /* 底部安全区域 */
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+
+        /* === 祢豆子主题装饰元素 === */
+        /* 飘落樱花瓣 */
+        .sakura-petal {
+            position: fixed;
+            top: -20px;
+            width: 14px; height: 14px;
+            background: radial-gradient(circle at 30% 30%, #FFC0CB, #FFB6C1 50%, #FF9FB5);
+            border-radius: 0 100% 0 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+            animation: sakuraFall linear infinite;
+        }
+        @keyframes sakuraFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+        }
+        /* 麻叶纹（祢豆子和服图案）背景 */
+        .asanoha-bg {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 0;
+            opacity: 0.04;
+            background-image:
+                repeating-linear-gradient(45deg, transparent 0, transparent 28px, var(--primary) 28px, var(--primary) 29px),
+                repeating-linear-gradient(-45deg, transparent 0, transparent 28px, var(--primary) 28px, var(--primary) 29px),
+                repeating-linear-gradient(0deg, transparent 0, transparent 28px, var(--primary) 28px, var(--primary) 29px),
+                repeating-linear-gradient(90deg, transparent 0, transparent 28px, var(--primary) 28px, var(--primary) 29px);
+        }
+        /* 竹筒装饰图标 */
+        .bamboo-deco {
+            display: inline-block;
+            font-size: 18px;
+            filter: hue-rotate(-10deg);
+            vertical-align: middle;
+        }
+        /* 祢豆子头像光环 */
+        .nezuko-aura {
+            position: relative;
+        }
+        .nezuko-aura::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #FFB6C1, #FF8FA3, #FF69B4, #FFB6C1);
+            z-index: -1;
+            animation: spin 4s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* 进度条样式 */
+        .progress-ring {
+            width: 100%; height: 8px;
+            background: var(--primary-lighter);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF8FA3, #FF69B4);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+            animation: shimmer 2s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.15); }
+            100% { filter: brightness(1); }
+        }
+        /* 推荐卡片可添加任务按钮 */
+        .rec-add-task {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rec-add-task:active { transform: scale(0.92); }
+        .rec-add-task.added {
+            background: #4CAF50;
+        }
+        .rec-item-detail {
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            border-left: 3px solid var(--primary-light);
+        }
+        .rec-meal-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start;
+            padding: 4px 0;
+        }
+        .rec-meal-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            flex-shrink: 0;
+            width: 50px;
+        }
+        .rec-meal-content { flex: 1; font-size: 12px; line-height: 1.5; }
+        .rec-cal-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--primary-lighter);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-left: 6px;
+        }
+        .rec-section-header {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .rec-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-down { background: #E8F5E9; color: #2E7D32; }
+        .badge-up { background: #FFEBEE; color: #C62828; }
+        .badge-flat { background: #FFF3E0; color: #E65100; }
     </style>
 </head>
 <body>
     <div class="bg-pattern"></div>
+    <div class="asanoha-bg"></div>
+    <div id="sakuraContainer"></div>
 
     <!-- 遮罩层 -->
     <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
@@ -753,9 +890,11 @@
     <aside class="sidebar" id="sidebar">
         <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
         <div class="sidebar-header">
-            <img src="images/nezuko-avatar.jpg" alt="祢豆子" class="sidebar-avatar float">
+            <div class="nezuko-aura" style="display:inline-block;">
+                <img src="images/nezuko-avatar.jpg" alt="祢豆子" class="sidebar-avatar float">
+            </div>
             <div class="sidebar-title">祢豆子的减重计划</div>
-            <div class="sidebar-subtitle">百日坚持，遇见更好的自己</div>
+            <div class="sidebar-subtitle">🎋 百日坚持，像祢豆子一样守护自己</div>
         </div>
         <nav class="nav-list">
             <div class="nav-item active" data-page="home" onclick="navigateTo('home')">
@@ -793,9 +932,13 @@
         <!-- 首页：百日打卡 -->
         <div class="page active" id="page-home">
             <div class="goal-display animate-in">
-                <div class="goal-label">&#127800; 目标体重</div>
+                <div class="goal-label">🌸 目标体重</div>
                 <div class="goal-number"><span id="goalWeight">47</span><span class="goal-unit"> kg</span></div>
                 <div class="goal-days" id="goalDays">第 1 天 / 百日计划</div>
+                <div class="progress-ring">
+                    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                </div>
+                <div style="font-size:12px;opacity:0.8;margin-top:6px;" id="progressText">减重进度 0%</div>
             </div>
 
             <div class="stats-row">
@@ -839,7 +982,7 @@
             <div class="card">
                 <div class="card-title">
                     <div class="icon">&#9889;</div>
-                    智能推荐
+                    智能推荐 <span style="font-size:11px;font-weight:400;color:var(--text-light);">🌸 基于今日体重动态生成</span>
                 </div>
                 <div id="smartRec">
                     <div class="empty-state" style="padding:20px;">
@@ -878,7 +1021,7 @@
             </div>
 
             <div class="recommend-section" id="taskRec" style="display:none;">
-                <div class="rec-title">&#127942; 今日智能推荐</div>
+                <div class="rec-title">&#127942; 今日智能推荐 <span style="font-size:11px;font-weight:400;color:var(--text-light);">（点击「＋加任务」添加到清单）</span></div>
                 <div id="taskRecContent"></div>
             </div>
         </div>
@@ -1158,7 +1301,7 @@
     function initData() {
         if (!DataStore.get('initialized', false)) {
             DataStore.set('goalWeight', 47);
-            DataStore.set('startWeight', 52);
+            DataStore.set('startWeight', 52.5);
             DataStore.set('weights', []);
             DataStore.set('tasks', []);
             DataStore.set('favorites', { exercise: [], recipe: [] });
@@ -1172,7 +1315,7 @@
         }
         // 确保初始体重和目标体重始终为正确值
         DataStore.set('goalWeight', 47);
-        DataStore.set('startWeight', 52);
+        DataStore.set('startWeight', 52.5);
     }
     initData();
 
@@ -1210,10 +1353,108 @@
         if (page === 'wardrobe') renderWardrobe();
     }
 
-    // ==================== 百日打卡 ====================
+    // ==================== 智能推荐系统 ====================
+    // 运动计划池 - 7天轮换，每天不同组合
+    const exercisePool = [
+        { // 周一
+            cardio: { name: '跑步机快走', duration: 40, pace: '6.5 min/km', detail: '中等配速，保持心率在120-140bpm', video: '帕梅拉30分钟快走燃脂', videoQuery: '帕梅拉 快走 燃脂' },
+            strength: { name: '小哑铃·上肢塑形', duration: 20, detail: '哑铃推举 3×12 | 哑铃弯举 3×15 | 哑铃臂屈伸 3×12 | 侧平举 3×15', video: '帕梅拉10分钟哑铃手臂训练', videoQuery: '帕梅拉 哑铃 手臂' }
+        },
+        { // 周二
+            cardio: { name: '有氧操', duration: 35, pace: '中高强度', detail: '跟操保持节奏，注意收紧核心', video: '刘畊宏本草纲目跟练', videoQuery: '刘畊宏 本草纲目' },
+            strength: { name: '壶铃·下肢力量', duration: 20, detail: '壶铃摇摆 4×15 | 壶铃深蹲 3×15 | 壶铃箭步蹲 3×12', video: '壶铃全身训练20分钟', videoQuery: '壶铃 全身训练' }
+        },
+        { // 周三
+            cardio: { name: '跑步机变速走', duration: 40, pace: '5.5-7.5 min/km 交替', detail: '快走2分钟+慢走1分钟交替，燃脂效率更高', video: '变速走燃脂跟练', videoQuery: '变速走 燃脂 跟练' },
+            strength: { name: '拉力绳·全身塑形', duration: 20, detail: '拉力绳深蹲 3×15 | 拉力绳划船 3×12 | 拉力绳推胸 3×12 | 拉力绳硬拉 3×15', video: '拉力绳全身塑形20分钟', videoQuery: '拉力绳 全身 塑形' }
+        },
+        { // 周四
+            cardio: { name: 'HIIT有氧操', duration: 30, pace: '高强度间歇', detail: '30秒高强度+30秒休息，共20组', video: '周六野20分钟HIIT燃脂', videoQuery: '周六野 HIIT 燃脂' },
+            strength: { name: '小哑铃·肩臂雕刻', duration: 20, detail: '哑铃肩推 3×12 | 哑铃前平举 3×15 | 哑铃侧平举 3×15 | 哑铃俯身飞鸟 3×12', video: '帕梅拉肩臂训练', videoQuery: '帕梅拉 肩臂 训练' }
+        },
+        { // 周五
+            cardio: { name: '跑步机快走', duration: 45, pace: '6.0 min/km', detail: '稍快配速，延长时长强化燃脂', video: '帕梅拉45分钟快走', videoQuery: '帕梅拉 45分钟 快走' },
+            strength: { name: '壶铃·核心稳定', duration: 20, detail: '壶铃摇摆 4×15 | 壶铃土耳其起立 3×8 | 平板支撑 3×45秒 | 俄罗斯转体 3×20', video: '壶铃核心训练', videoQuery: '壶铃 核心 训练' }
+        },
+        { // 周六
+            cardio: { name: '舞蹈有氧', duration: 35, pace: '中等强度', detail: '快乐跳舞燃脂，注意活动全身', video: '帕梅拉15分钟快乐舞蹈', videoQuery: '帕梅拉 快乐舞蹈' },
+            strength: { name: '拉力绳·臀腿塑形', duration: 20, detail: '拉力绳臀桥 3×20 | 拉力绳侧步蹲 3×15 | 拉力绳硬拉 3×15 | 拉力绳蚌式开合 3×20', video: '拉力绳臀腿训练', videoQuery: '拉力绳 臀腿 训练' }
+        },
+        { // 周日
+            cardio: { name: '轻松快走', duration: 30, pace: '7.0 min/km', detail: '恢复日，轻松步行促进血液循环', video: '美丽芭蕾全身拉伸', videoQuery: '美丽芭蕾 拉伸' },
+            strength: { name: '全身拉伸恢复', duration: 20, detail: '全身拉伸放松，配合泡沫轴筋膜放松，让肌肉恢复', video: '全身拉伸放松20分钟', videoQuery: '全身拉伸 放松 20分钟' }
+        }
+    ];
+
+    // 饮食计划池 - 7天轮换
+    const dietPool = [
+        { // 周一
+            breakfast: '全麦面包1片 + 水煮蛋1个 + 牛奶200ml', bCal: 350,
+            lunch: '糙米饭半碗 + 鸡胸肉150g + 西兰花 + 小番茄', lCal: 450,
+            dinner: '豆腐菌菇汤 + 凉拌黄瓜 + 少量紫薯', dCal: 200,
+            snack: '苹果1个', sCal: 80, totalCal: 1080
+        },
+        { // 周二
+            breakfast: '燕麦牛奶粥 + 水煮蛋1个 + 圣女果5颗', bCal: 300,
+            lunch: '杂粮饭半碗 + 清蒸鱼100g + 蔬菜沙拉(橄榄油醋汁)', lCal: 400,
+            dinner: '鸡胸肉沙拉 + 紫菜蛋花汤', dCal: 250,
+            snack: '无糖酸奶100g', sCal: 70, totalCal: 1020
+        },
+        { // 周三
+            breakfast: '全麦三明治(生菜+番茄+鸡胸) + 牛奶200ml', bCal: 320,
+            lunch: '藜麦鸡胸沙拉 + 橄榄油醋汁 + 牛油果半个', lCal: 420,
+            dinner: '蒸蛋羹 + 清炒时蔬 + 小碗杂粮粥', dCal: 230,
+            snack: '巴旦木10颗', sCal: 80, totalCal: 1050
+        },
+        { // 周四
+            breakfast: '紫薯1个(约150g) + 豆浆300ml + 水煮蛋1个', bCal: 330,
+            lunch: '糙米饭半碗 + 酱牛肉80g + 西兰花 + 胡萝卜', lCal: 440,
+            dinner: '番茄豆腐汤 + 凉拌菠菜 + 魔芋丝', dCal: 210,
+            snack: '蓝莓1小盒(约100g)', sCal: 60, totalCal: 1040
+        },
+        { // 周五
+            breakfast: '玉米半根 + 牛奶200ml + 水煮蛋1个', bCal: 310,
+            lunch: '杂粮饭半碗 + 虾仁100g + 彩椒 + 芦笋', lCal: 420,
+            dinner: '鸡胸蔬菜汤 + 海带丝 + 少量红薯', dCal: 220,
+            snack: '小番茄10颗', sCal: 30, totalCal: 980
+        },
+        { // 周六
+            breakfast: '全麦面包1片 + 牛油果1/4个 + 水煮蛋1个', bCal: 340,
+            lunch: '糙米饭半碗 + 煎三文鱼80g + 蔬菜沙拉', lCal: 450,
+            dinner: '蔬菜豆腐煲 + 海带丝 + 少量杂粮', dCal: 220,
+            snack: '猕猴桃1个', sCal: 50, totalCal: 1060
+        },
+        { // 周日
+            breakfast: '酸奶燕麦杯 + 蓝莓 + 坚果碎', bCal: 320,
+            lunch: '杂粮饭半碗 + 煎鸡胸100g + 蔬菜 + 菌菇', lCal: 430,
+            dinner: '番茄蛋花汤 + 凉拌豆腐 + 黄瓜条', dCal: 200,
+            snack: '核桃2颗', sCal: 50, totalCal: 1000
+        }
+    ];
+
+    // 从收藏中查找相关跟练视频
+    function findFavVideo(keyword) {
+        const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
+        const all = [...favs.exercise, ...favs.recipe];
+        const match = all.find(f => f.name.includes(keyword) || keyword.includes(f.name));
+        return match ? match : null;
+    }
+
+    // 添加推荐内容为每日任务
+    function addRecAsTask(text) {
+        const tasks = DataStore.get('tasks', []);
+        // 避免重复添加
+        if (tasks.some(t => t.text === text)) {
+            alert('该任务已添加过啦~');
+            return;
+        }
+        tasks.push({ text, done: false });
+        DataStore.set('tasks', tasks);
+        alert('已添加到每日任务 ✓');
+    }
     function renderHome() {
         const goal = DataStore.get('goalWeight', 47);
-        const start = DataStore.get('startWeight', 52);
+        const start = DataStore.get('startWeight', 52.5);
         const weights = DataStore.get('weights', []);
         document.getElementById('goalWeight').textContent = goal;
 
@@ -1245,6 +1486,18 @@
         } else {
             document.getElementById('currentWeight').textContent = '--';
             document.getElementById('weightChange').textContent = '--';
+        }
+
+        // 更新进度条
+        const totalGoal = start - goal;
+        if (weights.length > 0) {
+            const lost = Math.max(0, start - weights[weights.length - 1].weight);
+            const pct = Math.min(100, Math.round((lost / totalGoal) * 100));
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressText').textContent = `减重进度 ${pct}% ｜ 已减 ${lost.toFixed(1)} kg / 目标 ${totalGoal.toFixed(1)} kg`;
+        } else {
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = `减重进度 0% ｜ 目标减重 ${totalGoal.toFixed(1)} kg`;
         }
 
         // 渲染记录列表
@@ -1305,122 +1558,201 @@
 
     function renderSmartRec(weights) {
         const el = document.getElementById('smartRec');
-        const start = DataStore.get('startWeight', 52);
+        const start = DataStore.get('startWeight', 52.5);
         const goal = DataStore.get('goalWeight', 47);
 
         if (weights.length === 0) {
-            el.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="icon">&#128161;</div><p>录入今日体重后查看智能推荐</p></div>`;
+            el.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="icon">&#128161;</div><p>录入今日体重后查看智能推荐</p><p style="font-size:12px;margin-top:4px;color:var(--text-light);">祢豆子会根据体重变化为你定制计划 🌸</p></div>`;
             return;
         }
 
         const latest = weights[weights.length - 1];
         const todayWeight = latest.weight;
-        const totalLost = start - todayWeight;       // 累计已减（正数=减了）
-        const remaining = todayWeight - goal;         // 距离目标（正数=还需减）
-        const totalGoal = start - goal;               // 总共需要减的量
 
-        // 计算近期趋势（最近3天 vs 之前3天）
-        let trend = 0, trendLabel = '';
-        if (weights.length >= 3) {
-            const recent3 = weights.slice(-3).reduce((s, w) => s + w.weight, 0) / 3;
-            const prev3 = weights.length >= 6
-                ? weights.slice(-6, -3).reduce((s, w) => s + w.weight, 0) / 3
-                : start;
-            trend = prev3 - recent3; // 正=在减, 负=在涨
-        } else if (weights.length >= 2) {
-            trend = weights[weights.length - 2].weight - todayWeight;
+        // 对比当天 vs 前一天（首次打卡则对比初始体重）
+        let yesterdayWeight = start;
+        let dayDiff = 0;
+        if (weights.length >= 2) {
+            yesterdayWeight = weights[weights.length - 2].weight;
+            dayDiff = yesterdayWeight - todayWeight;
+        } else {
+            dayDiff = start - todayWeight;
         }
 
-        if (trend > 0.1) trendLabel = ' 📉 体重正在下降，趋势良好！';
-        else if (trend < -0.1) trendLabel = ' 📈 体重有上升趋势，需要调整！';
-        else trendLabel = ' ➡️ 体重趋于平稳。';
+        // 判断涨跌趋势
+        let trendType = 'flat';
+        let trendBadge = '';
+        if (dayDiff > 0.05) {
+            trendType = 'down';
+            trendBadge = '<span class="rec-badge badge-down">📉 体重下降</span>';
+        } else if (dayDiff < -0.05) {
+            trendType = 'up';
+            trendBadge = '<span class="rec-badge badge-up">📈 体重上升</span>';
+        } else {
+            trendType = 'flat';
+            trendBadge = '<span class="rec-badge badge-flat">➡️ 体重持平</span>';
+        }
 
-        // 计算 BMR（Mifflin-St Jeor 公式，女性）
-        const height = 160; // 默认身高，可从维度获取
-        const age = 25;     // 默认年龄
+        // 整体进度
+        const totalLost = start - todayWeight;
+        const remaining = Math.max(0, todayWeight - goal);
+        const totalGoal = start - goal;
+        const progressPct = Math.round(Math.max(0, totalLost) / totalGoal * 100);
+
+        // BMR (Mifflin-St Jeor, 女性)
+        const dims = DataStore.get('dimensions', {});
+        const height = dims.height || 160;
+        const age = 25;
         const bmr = Math.round(10 * todayWeight + 6.25 * height - 5 * age - 161);
-        const tdee = Math.round(bmr * 1.375);  // 轻度活动
-        const deficit = remaining > 0 ? 500 : 300;
-        const targetIntake = Math.round(tdee - deficit);
+        const tdee = Math.round(bmr * 1.375);
 
-        let recs = [];
+        // 按星期轮换计划（0=周日 ... 6=周六）
+        const dayOfWeek = new Date().getDay();
+        let exercisePlan = JSON.parse(JSON.stringify(exercisePool[dayOfWeek]));
+        let dietPlan = JSON.parse(JSON.stringify(dietPool[dayOfWeek]));
 
-        // 01 - 进度概览
-        if (totalLost > 0 && remaining > 0) {
-            const pct = Math.round((totalLost / totalGoal) * 100);
-            recs.push(`<strong>&#127881; 已减 ${totalLost.toFixed(1)} kg！</strong>完成进度 ${pct}%，距离目标 ${goal} kg 还有 <span style="color:var(--primary-dark);font-size:16px;">${remaining.toFixed(1)} kg</span>${trendLabel}`);
-        } else if (remaining <= 0) {
-            recs.push(`<strong>&#127942; 恭喜达成目标！</strong>当前体重 ${todayWeight} kg，已低于目标 ${goal} kg，进入维持阶段！`);
-        } else if (totalLost <= 0) {
-            recs.push(`<strong>&#128170; 减重之路刚开始！</strong>当前 ${todayWeight} kg，初始 ${start} kg，目标 ${goal} kg，共需减 <span style="color:var(--primary-dark);font-size:16px;">${totalGoal.toFixed(1)} kg</span>`);
-        }
-
-        // 02 - 有氧运动推荐（根据剩余体重分档）
-        let cardioMin, cardioPace, cardioVideo;
-        if (remaining > 4) {
-            cardioMin = 50; cardioPace = '7-8 min/km';
-            cardioVideo = '推荐跟练：<a href="#" style="color:var(--accent);">帕梅拉30分钟全身燃脂</a> 或 <a href="#" style="color:var(--accent);">刘畊宏本草纲目45分钟</a>';
-        } else if (remaining > 2) {
-            cardioMin = 40; cardioPace = '6.5-7.5 min/km';
-            cardioVideo = '推荐跟练：<a href="#" style="color:var(--accent);">周六野20分钟HIIT</a> 或 <a href="#" style="color:var(--accent);">帕梅拉20分钟有氧操</a>';
-        } else if (remaining > 0.5) {
-            cardioMin = 35; cardioPace = '6-7 min/km';
-            cardioVideo = '推荐跟练：<a href="#" style="color:var(--accent);">帕梅拉15分钟快乐舞蹈</a> 或 <a href="#" style="color:var(--accent);">美丽芭蕾全身拉伸</a>';
+        // 根据涨跌趋势调整
+        let trendAdvice = '';
+        if (trendType === 'up') {
+            // 体重上升：有氧+10分钟，饮食-150kcal
+            exercisePlan.cardio.duration += 10;
+            dietPlan.totalCal -= 150;
+            dietPlan.dCal = Math.max(150, dietPlan.dCal - 100);
+            dietPlan.sCal = Math.max(0, dietPlan.sCal - 50);
+            trendAdvice = `<div class="rec-item-detail" style="border-left-color:#FF5722;">
+                <strong>&#9888;&#65039; 今日体重上升 ${Math.abs(dayDiff).toFixed(1)} kg</strong>
+                <div style="font-size:12px;margin-top:4px;line-height:1.6;">
+                    别灰心！体重日常波动很正常，但今日已自动调整：<br>
+                    • 有氧时长 +10分钟，饮食热量 -150kcal<br>
+                    • 检查昨日是否高钠饮食（可能水肿）<br>
+                    • 今晚不再加餐，明早空腹有氧30分钟<br>
+                    • 保证7小时以上睡眠，睡眠不足影响代谢
+                </div>
+            </div>`;
+        } else if (trendType === 'down') {
+            trendAdvice = `<div class="rec-item-detail" style="border-left-color:#4CAF50;">
+                <strong>&#9989; 今日体重下降 ${dayDiff.toFixed(1)} kg！</strong>
+                <div style="font-size:12px;margin-top:4px;line-height:1.6;">
+                    减重节奏良好，继续保持！注意：<br>
+                    • 保证蛋白质摄入（每公斤体重1.2-1.5g）防肌肉流失<br>
+                    • 不要因为下降就多吃，保持热量缺口<br>
+                    • 明天可适当增加无氧训练强度
+                </div>
+            </div>`;
         } else {
-            cardioMin = 30; cardioPace = '休闲步行';
-            cardioVideo = '推荐：轻松快走或瑜伽拉伸，保持日常活动量即可';
-        }
-        recs.push(`<strong>&#127939; 有氧运动：</strong>快走/跳操 <b>${cardioMin}分钟</b>（配速 ${cardioPace}）<br><span style="font-size:12px;color:var(--text-light);">${cardioVideo}</span>`);
-
-        // 03 - 无氧运动推荐
-        let strengthMin, strengthEx;
-        if (remaining > 4) {
-            strengthMin = 25;
-            strengthEx = '壶铃摇摆 4组×15次 + 哑铃推举 3组×12次 + 平板支撑 3组×45秒 + 深蹲跳 3组×12次';
-        } else if (remaining > 2) {
-            strengthMin = 20;
-            strengthEx = '小哑铃复合训练 4组×12次 + 壶铃深蹲 3组×15次 + 俄罗斯转体 3组×20次';
-        } else {
-            strengthMin = 20;
-            strengthEx = '小哑铃塑形 3组×15次 + 臀桥 3组×20次 + 侧平板 3组×30秒';
-        }
-        recs.push(`<strong>&#128170; 无氧运动（居家小器械）：</strong>训练 <b>${strengthMin}分钟</b><br><span style="font-size:12px;color:var(--text-light);">${strengthEx}</span>`);
-
-        // 04 - 饮食推荐（分档）
-        let dietHTML;
-        if (remaining > 4) {
-            dietHTML = `<span style="font-size:12px;">早餐：全麦面包1片+水煮蛋1个+牛奶200ml（约350kcal）<br>午餐：糙米饭半碗+鸡胸肉150g+西兰花+小番茄（约450kcal）<br>晚餐：豆腐菌菇汤+凉拌黄瓜（约200kcal）<br>加餐：苹果1个（约80kcal）</span>`;
-        } else if (remaining > 2) {
-            dietHTML = `<span style="font-size:12px;">早餐：燕麦牛奶粥+水煮蛋+圣女果5颗（约300kcal）<br>午餐：杂粮饭+清蒸鱼100g+蔬菜沙拉（约400kcal）<br>晚餐：鸡胸肉沙拉+紫菜蛋花汤（约250kcal）<br>加餐：无糖酸奶100g（约70kcal）</span>`;
-        } else if (remaining > 0.5) {
-            dietHTML = `<span style="font-size:12px;">早餐：全麦三明治+牛奶200ml（约320kcal）<br>午餐：藜麦鸡胸沙拉+橄榄油醋汁（约420kcal）<br>晚餐：蒸蛋羹+清炒时蔬（约230kcal）<br>加餐：巴旦木10颗（约80kcal）</span>`;
-        } else {
-            dietHTML = `<span style="font-size:12px;">早餐：酸奶燕麦杯+蓝莓（约300kcal）<br>午餐：杂粮饭+煎三文鱼+蔬菜（约450kcal）<br>晚餐：番茄蛋花汤+凉拌豆腐（约200kcal）<br>加餐：核桃2颗（约50kcal）</span>`;
-        }
-        recs.push(`<strong>&#127858; 今日饮食推荐：</strong><br>${dietHTML}`);
-
-        // 05 - 热量分析
-        recs.push(`<strong>&#128293; 热量分析：</strong>基础代谢 <b>${bmr} kcal</b> | 日常消耗约 <b>${tdee} kcal</b> | 建议摄入 <b>${targetIntake} kcal</b> | 目标缺口 <b>${deficit} kcal</b>`);
-
-        // 06 - 趋势建议
-        if (trend > 0.3) {
-            recs.push(`<strong>&#9989; 当前减重趋势良好！</strong>保持现有节奏，避免过度节食。可适当增加蛋白质摄入防止肌肉流失。`);
-        } else if (trend < -0.3) {
-            recs.push(`<strong>&#9888;&#65039; 近期体重反弹，</strong>建议：①严格记录每餐饮食 ②今晚不额外加餐 ③明早空腹有氧30分钟 ④保证7小时以上睡眠。`);
-        } else if (remaining > 0) {
-            recs.push(`<strong>&#128161; 小贴士：</strong>平台期可以尝试改变运动方式（如从快走换成跳绳），或调整碳水循环来突破。`);
+            trendAdvice = `<div class="rec-item-detail" style="border-left-color:#FF9800;">
+                <strong>&#128161; 今日体重持平</strong>
+                <div style="font-size:12px;margin-top:4px;line-height:1.6;">
+                    可能进入平台期，建议：<br>
+                    • 尝试改变运动方式（快走→跳绳/游泳）<br>
+                    • 实行碳水循环法（高碳日+低碳日交替）<br>
+                    • 增加日常活动量（多走路、少坐电梯）<br>
+                    • 平台期通常1-2周自然突破，坚持记录
+                </div>
+            </div>`;
         }
 
-        // 07 - 引用收藏的跟练视频（如果有）
-        const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
-        if (favs.exercise.length > 0) {
-            const sample = favs.exercise.slice(0, 3).map(f =>
-                `<a href="${f.url}" target="_blank" style="color:var(--accent);">${f.name}</a>`
-            ).join('、');
-            recs.push(`<strong>&#128150; 你的收藏运动：</strong>${sample}`);
-        }
+        // 运动消耗估算
+        const cardioBurn = Math.round(exercisePlan.cardio.duration * 5);
+        const strengthBurn = Math.round(exercisePlan.strength.duration * 4);
+        const exerciseBurn = cardioBurn + strengthBurn;
+        const totalBurn = tdee + exerciseBurn;
+        const actualDeficit = totalBurn - dietPlan.totalCal;
 
-        el.innerHTML = recs.map(r => `<div class="rec-item">${r}</div>`).join('');
+        // 安全转义
+        function esc(s) { return s.replace(/'/g, "\\'"); }
+
+        // 组装HTML
+        let html = '';
+
+        // 1. 体重分析
+        html += `<div class="rec-item-detail">
+            <div class="rec-section-header">
+                <strong>&#128202; 今日体重分析</strong>
+                ${trendBadge}
+            </div>
+            <div style="font-size:12px;line-height:1.6;">
+                当前 <b style="font-size:16px;color:var(--primary-dark);">${todayWeight} kg</b>
+                ｜ 初始 ${start} kg ｜ 目标 ${goal} kg<br>
+                ${weights.length >= 2 ? `昨日 ${yesterdayWeight} kg → 今日 ${todayWeight} kg（${dayDiff > 0 ? '↓' + dayDiff.toFixed(1) + ' kg' : dayDiff < 0 ? '↑' + Math.abs(dayDiff).toFixed(1) + ' kg' : '持平'}）<br>` : '首次打卡，与初始体重对比<br>'}
+                已减 ${totalLost > 0 ? totalLost.toFixed(1) : '0'} kg ｜ 剩余 ${remaining.toFixed(1)} kg ｜ 完成进度 ${progressPct}%
+            </div>
+        </div>`;
+
+        // 2. 有氧运动
+        const cardioFav = findFavVideo(exercisePlan.cardio.videoQuery.split(' ')[0]);
+        const cardioVideoHTML = cardioFav
+            ? `<a href="${cardioFav.url}" target="_blank" style="color:var(--accent);font-weight:600;">&#128204; 你的收藏：${cardioFav.name}</a>`
+            : `推荐跟练：${exercisePlan.cardio.video}（小红书/抖音搜索 "${exercisePlan.cardio.videoQuery}"）`;
+        const cardioTaskText = `🏃 有氧：${exercisePlan.cardio.name} ${exercisePlan.cardio.duration}分钟（配速${exercisePlan.cardio.pace}）- ${exercisePlan.cardio.video}`;
+        html += `<div class="rec-item-detail">
+            <div class="rec-section-header">
+                <strong>&#127939; 有氧运动</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(cardioTaskText)}')">＋加为任务</button>
+            </div>
+            <div style="font-size:12px;line-height:1.7;">
+                <b style="font-size:14px;color:var(--primary-dark);">${exercisePlan.cardio.name}</b> · ${exercisePlan.cardio.duration}分钟<br>
+                配速：${exercisePlan.cardio.pace}<br>
+                ${exercisePlan.cardio.detail}<br>
+                <span style="color:var(--text-light);">${cardioVideoHTML}</span>
+            </div>
+        </div>`;
+
+        // 3. 无氧运动
+        const strengthFav = findFavVideo(exercisePlan.strength.videoQuery.split(' ')[0]);
+        const strengthVideoHTML = strengthFav
+            ? `<a href="${strengthFav.url}" target="_blank" style="color:var(--accent);font-weight:600;">&#128204; 你的收藏：${strengthFav.name}</a>`
+            : `推荐跟练：${exercisePlan.strength.video}（搜索 "${exercisePlan.strength.videoQuery}"）`;
+        const strengthTaskText = `💪 无氧：${exercisePlan.strength.name} ${exercisePlan.strength.duration}分钟 - ${exercisePlan.strength.detail}`;
+        html += `<div class="rec-item-detail">
+            <div class="rec-section-header">
+                <strong>&#128170; 无氧运动（居家小器械）</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(strengthTaskText)}')">＋加为任务</button>
+            </div>
+            <div style="font-size:12px;line-height:1.7;">
+                <b style="font-size:14px;color:var(--primary-dark);">${exercisePlan.strength.name}</b> · ${exercisePlan.strength.duration}分钟<br>
+                ${exercisePlan.strength.detail}<br>
+                <span style="color:var(--text-light);">${strengthVideoHTML}</span>
+            </div>
+        </div>`;
+
+        // 4. 饮食计划
+        const dietFav = findFavVideo('食谱') || findFavVideo('减脂') || findFavVideo('减重');
+        const dietFavHTML = dietFav ? `<br><a href="${dietFav.url}" target="_blank" style="color:var(--accent);font-weight:600;">&#128204; 你的收藏食谱：${dietFav.name}</a>` : '';
+        const dietTaskText = `🍽 今日饮食计划（共${dietPlan.totalCal}kcal）`;
+        html += `<div class="rec-item-detail">
+            <div class="rec-section-header">
+                <strong>&#127858; 今日饮食推荐</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(dietTaskText)}')">＋加为任务</button>
+            </div>
+            <div style="font-size:12px;line-height:1.8;">
+                <div class="rec-meal-row"><div class="rec-meal-label">早餐</div><div class="rec-meal-content">${dietPlan.breakfast}<span class="rec-cal-tag">${dietPlan.bCal}kcal</span></div></div>
+                <div class="rec-meal-row"><div class="rec-meal-label">午餐</div><div class="rec-meal-content">${dietPlan.lunch}<span class="rec-cal-tag">${dietPlan.lCal}kcal</span></div></div>
+                <div class="rec-meal-row"><div class="rec-meal-label">晚餐</div><div class="rec-meal-content">${dietPlan.dinner}<span class="rec-cal-tag">${dietPlan.dCal}kcal</span></div></div>
+                <div class="rec-meal-row"><div class="rec-meal-label">加餐</div><div class="rec-meal-content">${dietPlan.snack}<span class="rec-cal-tag">${dietPlan.sCal}kcal</span></div></div>
+                <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--primary-lighter);">
+                    <b style="font-size:15px;color:var(--primary-dark);">全天总计：${dietPlan.totalCal} kcal</b>${dietFavHTML}
+                </div>
+            </div>
+        </div>`;
+
+        // 5. 热量分析
+        const deficitColor = actualDeficit >= 300 ? '#4CAF50' : actualDeficit >= 0 ? '#FF9800' : '#FF5722';
+        html += `<div class="rec-item-detail">
+            <strong>&#128293; 热量分析</strong>
+            <div style="font-size:12px;line-height:1.8;margin-top:6px;">
+                基础代谢(BMR)：<b>${bmr} kcal</b> ｜ 日常消耗(TDEE)：<b>${tdee} kcal</b><br>
+                运动消耗：有氧${cardioBurn} + 无氧${strengthBurn} = <b>${exerciseBurn} kcal</b><br>
+                总消耗：<b>${totalBurn} kcal</b> ｜ 建议摄入：<b>${dietPlan.totalCal} kcal</b><br>
+                <span style="color:${deficitColor};font-size:16px;font-weight:800;">🔥 热量缺口：${actualDeficit} kcal</span><br>
+                <span style="font-size:11px;color:var(--text-light);">健康减脂建议每日缺口 300-500 kcal，7700kcal ≈ 1kg 脂肪</span>
+            </div>
+        </div>`;
+
+        // 6. 趋势建议
+        html += trendAdvice;
+
+        el.innerHTML = html;
     }
 
     // ==================== 每日任务 ====================
@@ -1439,67 +1771,110 @@
             `).join('');
         }
 
-        // 智能推荐（基于当天体重动态生成）
+        // 智能推荐（与首页同步，突出添加为任务）
         const weights = DataStore.get('weights', []);
         const recEl = document.getElementById('taskRec');
         if (weights.length > 0) {
             recEl.style.display = 'block';
             const latest = weights[weights.length - 1];
             const todayWeight = latest.weight;
-            const start = DataStore.get('startWeight', 52);
+            const start = DataStore.get('startWeight', 52.5);
             const goal = DataStore.get('goalWeight', 47);
-            const remaining = todayWeight - goal;
-            const totalLost = start - todayWeight;
 
-            // 趋势
-            let trend = 0;
-            if (weights.length >= 3) {
-                const r3 = weights.slice(-3).reduce((s,w)=>s+w.weight,0)/3;
-                const p3 = weights.length>=6 ? weights.slice(-6,-3).reduce((s,w)=>s+w.weight,0)/3 : start;
-                trend = p3 - r3;
-            } else if (weights.length >= 2) {
-                trend = weights[weights.length-2].weight - todayWeight;
+            // 判断涨跌
+            let yesterdayWeight = start;
+            let dayDiff = 0;
+            if (weights.length >= 2) {
+                yesterdayWeight = weights[weights.length - 2].weight;
+                dayDiff = yesterdayWeight - todayWeight;
+            } else {
+                dayDiff = start - todayWeight;
+            }
+            let trendType = 'flat';
+            if (dayDiff > 0.05) trendType = 'down';
+            else if (dayDiff < -0.05) trendType = 'up';
+
+            // 按星期轮换
+            const dayOfWeek = new Date().getDay();
+            let exercisePlan = JSON.parse(JSON.stringify(exercisePool[dayOfWeek]));
+            let dietPlan = JSON.parse(JSON.stringify(dietPool[dayOfWeek]));
+
+            // 趋势调整
+            if (trendType === 'up') {
+                exercisePlan.cardio.duration += 10;
+                dietPlan.totalCal -= 150;
             }
 
-            const bmr = Math.round(10*todayWeight + 6.25*160 - 5*25 - 161);
-            const tdee = Math.round(bmr*1.375);
-            const deficit = remaining > 0 ? 500 : 300;
+            // BMR
+            const dims = DataStore.get('dimensions', {});
+            const height = dims.height || 160;
+            const bmr = Math.round(10 * todayWeight + 6.25 * height - 5 * 25 - 161);
+            const tdee = Math.round(bmr * 1.375);
+            const cardioBurn = Math.round(exercisePlan.cardio.duration * 5);
+            const strengthBurn = Math.round(exercisePlan.strength.duration * 4);
+            const totalBurn = tdee + cardioBurn + strengthBurn;
+            const actualDeficit = totalBurn - dietPlan.totalCal;
+
+            function esc(s) { return s.replace(/'/g, "\\'"); }
+
+            const cardioTask = `🏃 有氧：${exercisePlan.cardio.name} ${exercisePlan.cardio.duration}分钟（配速${exercisePlan.cardio.pace}）`;
+            const strengthTask = `💪 无氧：${exercisePlan.strength.name} ${exercisePlan.strength.duration}分钟`;
+            const dietTask = `🍽 饮食计划：早${dietPlan.bCal}+午${dietPlan.lCal}+晚${dietPlan.dCal}+加餐${dietPlan.sCal}=${dietPlan.totalCal}kcal`;
+            const waterTask = `💧 每日饮水2L+`;
+            const allTasks = [cardioTask, strengthTask, dietTask, waterTask];
 
             let content = '';
-            // 运动推荐
-            if (remaining > 3) {
-                content += `<div class="rec-item"><strong>&#127939; 有氧：</strong>快走/跳操 <b>50分钟</b>（配速7-8 min/km）<br><span style="font-size:12px;color:var(--text-light);">跟练：帕梅拉30分钟全身燃脂 / 刘畊宏本草纲目</span></div>`;
-                content += `<div class="rec-item"><strong>&#128170; 无氧（居家小器械）：</strong>壶铃摇摆4组×15次 + 哑铃推举3组×12次 + 平板支撑3组×45秒</div>`;
-            } else if (remaining > 1.5) {
-                content += `<div class="rec-item"><strong>&#127939; 有氧：</strong>快走/跳操 <b>40分钟</b>（配速6.5-7.5 min/km）<br><span style="font-size:12px;color:var(--text-light);">跟练：周六野20分钟HIIT / 帕梅拉20分钟有氧操</span></div>`;
-                content += `<div class="rec-item"><strong>&#128170; 无氧（居家小器械）：</strong>小哑铃复合训练4组×12次 + 壶铃深蹲3组×15次</div>`;
-            } else if (remaining > 0) {
-                content += `<div class="rec-item"><strong>&#127939; 有氧：</strong>快走/跳操 <b>35分钟</b>（配速6-7 min/km）<br><span style="font-size:12px;color:var(--text-light);">跟练：帕梅拉15分钟快乐舞蹈 / 美丽芭蕾</span></div>`;
-                content += `<div class="rec-item"><strong>&#128170; 无氧（居家小器械）：</strong>小哑铃塑形3组×15次 + 臀桥3组×20次</div>`;
-            } else {
-                content += `<div class="rec-item"><strong>&#127939; 维持阶段：</strong>每日快走30分钟 + 瑜伽拉伸，保持活动量</div>`;
-            }
+            content += `<div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--text-light);">今日体重 ${todayWeight}kg ｜ 缺口 ${actualDeficit}kcal</span>
+                <button class="btn btn-primary btn-small" onclick="addAllRecAsTasks(${JSON.stringify(allTasks).replace(/"/g, '&quot;')})">一键添加全部</button>
+            </div>`;
 
-            // 饮食推荐
-            if (remaining > 3) {
-                content += `<div class="rec-item"><strong>&#127858; 饮食：</strong>早餐350kcal(全麦面包+蛋+奶) | 午餐450kcal(糙米+鸡胸+蔬菜) | 晚餐200kcal(豆腐汤)</div>`;
-            } else if (remaining > 0) {
-                content += `<div class="rec-item"><strong>&#127858; 饮食：</strong>早餐300kcal(燕麦+蛋) | 午餐400kcal(杂粮+鱼+沙拉) | 晚餐250kcal(鸡胸沙拉)</div>`;
-            } else {
-                content += `<div class="rec-item"><strong>&#127858; 维持饮食：</strong>早餐300kcal | 午餐450kcal | 晚餐250kcal，均衡营养</div>`;
-            }
+            content += `<div class="rec-item-detail">
+                <div class="rec-section-header"><strong>🏃 有氧 ${exercisePlan.cardio.duration}min</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(cardioTask)}')">＋加任务</button></div>
+                <div style="font-size:12px;">${exercisePlan.cardio.name}（${exercisePlan.cardio.pace}）<br>${exercisePlan.cardio.video}</div>
+            </div>`;
+            content += `<div class="rec-item-detail">
+                <div class="rec-section-header"><strong>💪 无氧 ${exercisePlan.strength.duration}min</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(strengthTask)}')">＋加任务</button></div>
+                <div style="font-size:12px;">${exercisePlan.strength.name}<br>${exercisePlan.strength.detail}</div>
+            </div>`;
+            content += `<div class="rec-item-detail">
+                <div class="rec-section-header"><strong>🍽 饮食 ${dietPlan.totalCal}kcal</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(dietTask)}')">＋加任务</button></div>
+                <div style="font-size:12px;line-height:1.6;">早：${dietPlan.breakfast}(${dietPlan.bCal}kcal)<br>午：${dietPlan.lunch}(${dietPlan.lCal}kcal)<br>晚：${dietPlan.dinner}(${dietPlan.dCal}kcal)<br>加餐：${dietPlan.snack}(${dietPlan.sCal}kcal)</div>
+            </div>`;
+            content += `<div class="rec-item-detail">
+                <div class="rec-section-header"><strong>🔥 热量缺口 ${actualDeficit}kcal</strong>
+                <button class="rec-add-task" onclick="addRecAsTask('${esc(waterTask)}')">＋加任务</button></div>
+                <div style="font-size:12px;">BMR ${bmr} | TDEE ${tdee} | 运动${cardioBurn+strengthBurn} | 摄入${dietPlan.totalCal}</div>
+            </div>`;
 
-            // 热量
-            content += `<div class="rec-item"><strong>&#128293; 热量：</strong>BMR ${bmr} kcal | TDEE ${tdee} kcal | 建议摄入 ${Math.round(tdee-deficit)} kcal | 缺口 ${deficit} kcal</div>`;
-
-            // 趋势提示
-            if (trend > 0.2) content += `<div class="rec-item"><strong>&#9989;</strong> 体重下降趋势良好，已减 ${totalLost.toFixed(1)} kg，继续加油！</div>`;
-            else if (trend < -0.2) content += `<div class="rec-item"><strong>&#9888;&#65039;</strong> 体重上升趋势，今晚控制饮食，明早增加有氧！</div>`;
-            else content += `<div class="rec-item"><strong>&#128161;</strong> 体重稳定，可尝试变换运动方式突破平台期。</div>`;
+            if (trendType === 'down') content += `<div class="rec-item" style="border-left:3px solid #4CAF50;">✅ 体重下降 ${dayDiff.toFixed(1)}kg，继续保持节奏！</div>`;
+            else if (trendType === 'up') content += `<div class="rec-item" style="border-left:3px solid #FF5722;">⚠️ 体重上升 ${Math.abs(dayDiff).toFixed(1)}kg，已自动+10min有氧/-150kcal</div>`;
+            else content += `<div class="rec-item" style="border-left:3px solid #FF9800;">💡 体重持平，尝试改变运动方式突破平台</div>`;
 
             document.getElementById('taskRecContent').innerHTML = content;
         } else {
             recEl.style.display = 'none';
+        }
+    }
+    // 一键添加全部推荐为任务
+    function addAllRecAsTasks(tasks) {
+        const existing = DataStore.get('tasks', []);
+        let added = 0;
+        tasks.forEach(text => {
+            if (!existing.some(t => t.text === text)) {
+                existing.push({ text, done: false });
+                added++;
+            }
+        });
+        DataStore.set('tasks', existing);
+        if (added > 0) {
+            alert(`已添加 ${added} 条任务到每日任务 ✓`);
+            renderTasks();
+        } else {
+            alert('这些任务都已添加过啦~');
         }
     }
     function addTask() {
@@ -1826,6 +2201,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         renderHome();
         fetchWeather();
+        generateSakura();
         // 每分钟检查提醒
         setInterval(() => {
             checkWaterReminder();
@@ -1835,6 +2211,22 @@
         checkWaterReminder();
         checkEventReminders();
     });
+
+    // 生成飘落樱花瓣
+    function generateSakura() {
+        const container = document.getElementById('sakuraContainer');
+        for (let i = 0; i < 12; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'sakura-petal';
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.animationDuration = (8 + Math.random() * 10) + 's';
+            petal.style.animationDelay = (Math.random() * 15) + 's';
+            petal.style.width = (8 + Math.random() * 10) + 'px';
+            petal.style.height = petal.style.width;
+            petal.style.opacity = 0.3 + Math.random() * 0.4;
+            container.appendChild(petal);
+        }
+    }
 
     // 滑动手势打开侧边栏
     let touchStartX = 0;
