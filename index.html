@@ -2100,84 +2100,62 @@
         renderFavorites();
         showToast('已删除');
     }
-    // ========== 复制链接：平台剪贴板识别格式 ==========
+    // ========== 复制链接 ==========
+    // 小红书剪贴板识别的官方格式（来自小红书App内「复制链接」生成的文本）：
+    //   http://xhslink.com/xxxxx,复制本条信息,打开【小红书】App查看精彩内容!
+    // 关键：URL在前、英文逗号分隔（不是空格）、结尾用感叹号
+    function formatShareText(url, type) {
+        if (type === 'xhs') {
+            return url + ',复制本条信息,打开【小红书】App查看精彩内容!';
+        }
+        if (type === 'douyin') {
+            return url + ',复制本条信息,打开【抖音】App查看精彩内容!';
+        }
+        return url;
+    }
+
     function copyLink(url, type) {
         lastFavType = type;
         const platform = type === 'xhs' ? '小红书' : '抖音';
-        // 小红书/抖音App通过剪贴板检测跳转时，需要特定格式文本（"口令"格式）
-        // 纯URL不会被识别，必须带上平台关键词
-        let copyText;
-        if (type === 'xhs') {
-            copyText = '点击打开小红书查看：' + url + ' 复制本条信息，打开【小红书】App查看精彩内容！';
-        } else {
-            copyText = '点击打开抖音查看：' + url + ' 复制本条信息，打开【抖音】App查看精彩内容！';
-        }
-        doCopy(copyText, platform);
+        const copyText = formatShareText(url, type);
+        doCopyText(copyText);
+        showToast('已复制 ✅\n打开「' + platform + '」\n剪贴板检测会自动弹出');
     }
 
     let lastFavType = 'xhs';
-    // ========== 打开：复制口令 + 尝试Scheme深链 ==========
+    // ========== 打开 ==========
     function openFav(type, url, name) {
         lastFavType = type;
         const platform = type === 'xhs' ? '小红书' : '抖音';
 
-        // 1. 构造平台识别口令并复制到剪贴板（核心）
-        let copyText;
-        let schemeUrl = '';
-        if (type === 'xhs') {
-            copyText = '点击打开小红书查看：' + url + ' 复制本条信息，打开【小红书】App查看精彩内容！';
-            // 尝试小红书 scheme 深链
-            schemeUrl = 'xhsdiscover://item/' + encodeURIComponent(url);
+        // 1. 先复制（带识别格式，打开App后粘贴也可用）
+        doCopyText(formatShareText(url, type));
+
+        // 2. 用 xhslink.com / v.douyin.com 跳转页打开（最可靠）
+        //    这些短链页面会自动检测App并显示"打开App"按钮
+        const opened = window.open(url, '_blank');
+
+        if (opened) {
+            showToast('正在打开跳转页...\n点击页面上的「打开App」即可\n链接也已复制到剪贴板');
         } else {
-            copyText = '点击打开抖音查看：' + url + ' 复制本条信息，打开【抖音】App查看精彩内容！';
-            schemeUrl = 'snssdk1128://';
+            showToast('弹窗被拦截 ⚠️\n链接已复制，打开「' + platform + '」\nApp会自动检测剪贴板');
         }
-
-        // 2. 先复制口令
-        doCopy(copyText, platform);
-
-        // 3. 再尝试用 scheme 唤起 App
-        if (schemeUrl) {
-            const startTime = Date.now();
-            // 方案A：iframe方式（兼容性好）
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = schemeUrl;
-            document.body.appendChild(iframe);
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-                // 如果 600ms 内没有离开页面，说明 App 没装或 scheme 无效
-                if (Date.now() - startTime < 800) return;
-            }, 200);
-            // 方案B：也尝试 window.open（有些浏览器需要）
-            setTimeout(() => {
-                window.open(schemeUrl, '_self');
-            }, 100);
-        }
-
-        // 4. 提示用户
-        showToast('已复制口令 ✅\n打开「' + platform + '」App\n剪贴板检测会自动弹出');
     }
 
-    // ========== 统一复制实现 ==========
-    function doCopy(text, platform) {
-        // textarea fallback 比 clipboard API 更可靠（PWA/iOS Safari 场景）
+    // ========== 统一复制 ==========
+    function doCopyText(text) {
+        // textarea + execCommand 在 PWA / iOS Safari 下比 clipboard API 更可靠
         const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
         document.body.appendChild(ta);
         ta.select();
         ta.setSelectionRange(0, 99999);
-        let copied = false;
-        try {
-            copied = document.execCommand('copy');
-        } catch(e) {}
+        try { document.execCommand('copy'); } catch(e) {}
         document.body.removeChild(ta);
-
-        if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).catch(() => {
-                // 最终兜底：提示用户长按手动复制
-            });
+        // clipboard API 兜底
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function(){});
         }
     }
 
