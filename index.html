@@ -1171,7 +1171,7 @@
                     <button class="btn btn-primary" onclick="addFavorite()">收藏</button>
                 </div>
                 <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.5;">
-                    💡 小红书/抖音分享时选「复制链接」，把短链（如 xhslink.com / v.douyin.com）粘贴到名称下方输入框即可
+                    💡 在App内分享时选「复制链接」，把短链（如 xhslink.com / v.douyin.com）粘贴到下方。点击「打开」会通过官方跳转页唤起App
                 </div>
             </div>
 
@@ -2100,51 +2100,34 @@
         renderFavorites();
         showToast('已删除');
     }
-    // ========== 复制链接 ==========
-    // 小红书剪贴板识别的官方格式（来自小红书App内「复制链接」生成的文本）：
-    //   http://xhslink.com/xxxxx,复制本条信息,打开【小红书】App查看精彩内容!
-    // 关键：URL在前、英文逗号分隔（不是空格）、结尾用感叹号
-    function formatShareText(url, type) {
-        if (type === 'xhs') {
-            return url + ',复制本条信息,打开【小红书】App查看精彩内容!';
+    // ========== 打开收藏：xhslink.com / v.douyin.com 官方跳转页 ==========
+    // 从网页无法直接唤起App（iOS限制），唯一可靠路径是用平台自带的短链跳转页。
+    // 打开后浏览器会显示「打开App」按钮，点击即可跳转。
+    function openFav(type, url, name) {
+        lastFavType = type;
+        const platform = type === 'xhs' ? '小红书' : '抖音';
+        // 同时复制一份URL备用
+        doCopyText(url);
+        // 用新窗口打开短链跳转页（xhslink.com / v.douyin.com）
+        const opened = window.open(url, '_blank');
+        if (opened) {
+            showToast('已打开「' + platform + '」跳转页\n点击页面上的「打开App」按钮即可');
+        } else {
+            showToast('弹窗被拦截 ⚠️\n请点击"复制"按钮手动复制链接\n然后在「' + platform + '」中粘贴');
         }
-        if (type === 'douyin') {
-            return url + ',复制本条信息,打开【抖音】App查看精彩内容!';
-        }
-        return url;
     }
 
     function copyLink(url, type) {
         lastFavType = type;
         const platform = type === 'xhs' ? '小红书' : '抖音';
-        const copyText = formatShareText(url, type);
-        doCopyText(copyText);
-        showToast('已复制 ✅\n打开「' + platform + '」\n剪贴板检测会自动弹出');
+        doCopyText(url);
+        showToast('已复制链接 ✅\n建议用「打开」按钮直接跳转\n或粘贴到「' + platform + '」搜索框');
     }
 
     let lastFavType = 'xhs';
-    // ========== 打开 ==========
-    function openFav(type, url, name) {
-        lastFavType = type;
-        const platform = type === 'xhs' ? '小红书' : '抖音';
-
-        // 1. 先复制（带识别格式，打开App后粘贴也可用）
-        doCopyText(formatShareText(url, type));
-
-        // 2. 用 xhslink.com / v.douyin.com 跳转页打开（最可靠）
-        //    这些短链页面会自动检测App并显示"打开App"按钮
-        const opened = window.open(url, '_blank');
-
-        if (opened) {
-            showToast('正在打开跳转页...\n点击页面上的「打开App」即可\n链接也已复制到剪贴板');
-        } else {
-            showToast('弹窗被拦截 ⚠️\n链接已复制，打开「' + platform + '」\nApp会自动检测剪贴板');
-        }
-    }
 
     // ========== 统一复制 ==========
     function doCopyText(text) {
-        // textarea + execCommand 在 PWA / iOS Safari 下比 clipboard API 更可靠
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
@@ -2153,7 +2136,6 @@
         ta.setSelectionRange(0, 99999);
         try { document.execCommand('copy'); } catch(e) {}
         document.body.removeChild(ta);
-        // clipboard API 兜底
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).catch(function(){});
         }
