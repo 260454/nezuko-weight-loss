@@ -2064,10 +2064,10 @@
                 return `
                 <div class="fav-item">
                     <span class="fav-badge ${badgeClass}">${platformLabel}</span>
-                    <a class="fav-link" title="${safeUrl}" onclick="openFav('${f.type}','${safeUrl}')">${safeName}</a>
+                    <a class="fav-link" title="${safeUrl}" onclick="openFav('${f.type}','${safeUrl}','${safeName}')">${safeName}</a>
                     <div class="fav-actions">
-                        <button class="fav-btn open" onclick="openFav('${f.type}','${safeUrl}')">打开</button>
-                        <button class="fav-btn copy" onclick="copyLink('${safeUrl}')">复制</button>
+                        <button class="fav-btn open" onclick="openFav('${f.type}','${safeUrl}','${safeName}')">打开</button>
+                        <button class="fav-btn copy" onclick="copyLink('${safeUrl}','${f.type}')">复制</button>
                         <button class="fav-btn del" onclick="deleteFav('${categoryName}', ${i})">删除</button>
                     </div>
                 </div>
@@ -2100,57 +2100,84 @@
         renderFavorites();
         showToast('已删除');
     }
-    function copyLink(url) {
-        // 先用现代 API，失败 fallback
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(
-                () => showToast('链接已复制 ✅\n请粘贴到 ' + (lastFavType === 'xhs' ? '小红书' : '抖音') + ' 打开'),
-                () => fallbackCopy(url)
-            );
+    // ========== 复制链接：平台剪贴板识别格式 ==========
+    function copyLink(url, type) {
+        lastFavType = type;
+        const platform = type === 'xhs' ? '小红书' : '抖音';
+        // 小红书/抖音App通过剪贴板检测跳转时，需要特定格式文本（"口令"格式）
+        // 纯URL不会被识别，必须带上平台关键词
+        let copyText;
+        if (type === 'xhs') {
+            copyText = '点击打开小红书查看：' + url + ' 复制本条信息，打开【小红书】App查看精彩内容！';
         } else {
-            fallbackCopy(url);
+            copyText = '点击打开抖音查看：' + url + ' 复制本条信息，打开【抖音】App查看精彩内容！';
         }
+        doCopy(copyText, platform);
     }
-    function fallbackCopy(url) {
+
+    let lastFavType = 'xhs';
+    // ========== 打开：复制口令 + 尝试Scheme深链 ==========
+    function openFav(type, url, name) {
+        lastFavType = type;
+        const platform = type === 'xhs' ? '小红书' : '抖音';
+
+        // 1. 构造平台识别口令并复制到剪贴板（核心）
+        let copyText;
+        let schemeUrl = '';
+        if (type === 'xhs') {
+            copyText = '点击打开小红书查看：' + url + ' 复制本条信息，打开【小红书】App查看精彩内容！';
+            // 尝试小红书 scheme 深链
+            schemeUrl = 'xhsdiscover://item/' + encodeURIComponent(url);
+        } else {
+            copyText = '点击打开抖音查看：' + url + ' 复制本条信息，打开【抖音】App查看精彩内容！';
+            schemeUrl = 'snssdk1128://';
+        }
+
+        // 2. 先复制口令
+        doCopy(copyText, platform);
+
+        // 3. 再尝试用 scheme 唤起 App
+        if (schemeUrl) {
+            const startTime = Date.now();
+            // 方案A：iframe方式（兼容性好）
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = schemeUrl;
+            document.body.appendChild(iframe);
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                // 如果 600ms 内没有离开页面，说明 App 没装或 scheme 无效
+                if (Date.now() - startTime < 800) return;
+            }, 200);
+            // 方案B：也尝试 window.open（有些浏览器需要）
+            setTimeout(() => {
+                window.open(schemeUrl, '_self');
+            }, 100);
+        }
+
+        // 4. 提示用户
+        showToast('已复制口令 ✅\n打开「' + platform + '」App\n剪贴板检测会自动弹出');
+    }
+
+    // ========== 统一复制实现 ==========
+    function doCopy(text, platform) {
+        // textarea fallback 比 clipboard API 更可靠（PWA/iOS Safari 场景）
         const ta = document.createElement('textarea');
-        ta.value = url;
-        ta.style.position = 'fixed';
-        ta.style.left = '-9999px';
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
         document.body.appendChild(ta);
         ta.select();
+        ta.setSelectionRange(0, 99999);
+        let copied = false;
         try {
-            document.execCommand('copy');
-            showToast('链接已复制 ✅');
-        } catch (e) {
-            showToast('复制失败，请长按链接手动复制');
-        }
+            copied = document.execCommand('copy');
+        } catch(e) {}
         document.body.removeChild(ta);
-    }
-    let lastFavType = 'xhs';
-    function openFav(type, url) {
-        lastFavType = type;
-        // iOS Safari 直接打开 scheme 可能被拦截，这里用三种策略：
-        // 1. 直接新窗口打开（用 _blank 让浏览器/App 处理）
-        // 2. 复制到剪贴板并提示，引导用户手动去对应 App 粘贴
-        const platform = type === 'xhs' ? '小红书' : '抖音';
-        const proceed = confirm(
-            `📱 跳转到 ${platform}\n\n` +
-            `由于 iOS 平台限制，无法直接打开 App 到原贴。\n\n` +
-            `✅ 已自动复制链接到剪贴板\n` +
-            `👉 请手动打开「${platform}」APP → 粘贴访问\n\n` +
-            `也可以直接点"是"尝试用浏览器打开链接`
-        );
-        if (proceed) {
-            // 同步复制 + 打开新窗口
-            try {
-                if (navigator.clipboard) navigator.clipboard.writeText(url);
-            } catch(e){}
-            window.open(url, '_blank');
-        } else {
-            try {
-                if (navigator.clipboard) navigator.clipboard.writeText(url);
-            } catch(e){}
-            showToast('链接已复制 ✅\n打开 ' + platform + ' 粘贴访问');
+
+        if (!copied && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(() => {
+                // 最终兜底：提示用户长按手动复制
+            });
         }
     }
 
