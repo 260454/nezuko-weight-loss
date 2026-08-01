@@ -257,6 +257,14 @@
             display: flex; gap: 10px;
             margin-bottom: 16px;
         }
+        .input-group.input-group-stack {
+            flex-direction: column;
+            gap: 8px;
+        }
+        .input-row {
+            display: flex; gap: 10px;
+        }
+        .input-row .form-select { flex: 1; min-width: 0; }
         .input-field {
             flex: 1;
             padding: 14px 16px;
@@ -373,34 +381,52 @@
         .badge-xhs { background: #FF2442; color: white; }
         .badge-douyin { background: #000; color: #00F2EA; }
         .fav-item {
-            display: flex; align-items: center;
+            display: flex; align-items: flex-start;
             padding: 12px;
             background: var(--primary-soft);
             border-radius: 12px;
             margin-bottom: 8px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         .fav-link {
-            flex: 1; font-size: 14px;
+            flex: 1 1 100%;
+            font-size: 14px;
             color: var(--text);
             text-decoration: none;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            line-height: 1.4;
+            cursor: pointer;
+            display: block;
+            order: 2;
         }
-        .fav-actions { display: flex; gap: 6px; }
+        .fav-actions {
+            display: flex; gap: 6px;
+            flex-shrink: 0;
+            order: 3;
+            margin-left: auto;
+        }
         .fav-btn {
             padding: 6px 12px; border: none;
             border-radius: 8px; font-size: 12px;
             cursor: pointer; font-weight: 600;
+            white-space: nowrap;
         }
         .fav-btn.copy {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        .fav-btn.open {
+            background: linear-gradient(135deg, #4FACFE, #00F2FE);
             color: white;
         }
         .fav-btn.del {
             background: #FFE4E9;
             color: #FF6B6B;
         }
+        .fav-badge { flex-shrink: 0; order: 1; }
         /* ========== 月视图日历（标签平铺风格） ========== */
         .cal-month-wrap {
             position: relative;
@@ -1127,20 +1153,25 @@
                     <div class="icon">&#10133;</div>
                     添加收藏
                 </div>
-                <div class="input-group">
-                    <select class="form-select" id="favType" style="width:100px;flex-shrink:0;">
-                        <option value="xhs">小红书</option>
-                        <option value="douyin">抖音</option>
-                    </select>
-                    <select class="form-select" id="favCategory" style="width:100px;flex-shrink:0;">
-                        <option value="exercise">运动</option>
-                        <option value="recipe">食谱</option>
-                    </select>
-                    <input type="text" class="input-field" id="favName" placeholder="名称">
+                <div class="input-group input-group-stack">
+                    <div class="input-row">
+                        <select class="form-select" id="favType">
+                            <option value="xhs">小红书</option>
+                            <option value="douyin">抖音</option>
+                        </select>
+                        <select class="form-select" id="favCategory">
+                            <option value="exercise">运动视频</option>
+                            <option value="recipe">减重食谱</option>
+                        </select>
+                    </div>
+                    <input type="text" class="input-field" id="favName" placeholder="名称（如：帕梅拉燃脂）">
                 </div>
                 <div class="input-group">
                     <input type="text" class="input-field" id="favUrl" placeholder="粘贴链接地址...">
                     <button class="btn btn-primary" onclick="addFavorite()">收藏</button>
+                </div>
+                <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.5;">
+                    💡 小红书/抖音分享时选「复制链接」，把短链（如 xhslink.com / v.douyin.com）粘贴到名称下方输入框即可
                 </div>
             </div>
 
@@ -2012,51 +2043,134 @@
     }
 
     // ==================== 收藏资源 ====================
+    function escAttr(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
     function renderFavorites() {
         const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
         const exEl = document.getElementById('favExercise');
         const reEl = document.getElementById('favRecipe');
 
-        function renderList(list, el) {
+        function renderList(list, el, categoryName) {
             if (list.length === 0) {
                 el.innerHTML = `<div class="empty-state" style="padding:20px;"><p style="font-size:13px;">暂无收藏</p></div>`;
                 return;
             }
-            el.innerHTML = list.map((f, i) => `
+            el.innerHTML = list.map((f, i) => {
+                const safeUrl = escAttr(f.url);
+                const safeName = escAttr(f.name);
+                const platformLabel = f.type === 'xhs' ? '小红书' : (f.type === 'douyin' ? '抖音' : '链接');
+                const badgeClass = f.type === 'xhs' ? 'badge-xhs' : 'badge-douyin';
+                return `
                 <div class="fav-item">
-                    <span class="fav-badge ${f.type === 'xhs' ? 'badge-xhs' : 'badge-douyin'}">${f.type === 'xhs' ? '小红书' : '抖音'}</span>
-                    <a href="${f.url}" target="_blank" class="fav-link">${f.name}</a>
+                    <span class="fav-badge ${badgeClass}">${platformLabel}</span>
+                    <a class="fav-link" title="${safeUrl}" onclick="openFav('${f.type}','${safeUrl}')">${safeName}</a>
                     <div class="fav-actions">
-                        <button class="fav-btn copy" onclick="copyLink('${f.url}')">复制</button>
-                        <button class="fav-btn del" onclick="deleteFav('${f.category}', ${i})">删除</button>
+                        <button class="fav-btn open" onclick="openFav('${f.type}','${safeUrl}')">打开</button>
+                        <button class="fav-btn copy" onclick="copyLink('${safeUrl}')">复制</button>
+                        <button class="fav-btn del" onclick="deleteFav('${categoryName}', ${i})">删除</button>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
-        renderList(favs.exercise, exEl);
-        renderList(favs.recipe, reEl);
+        renderList(favs.exercise, exEl, 'exercise');
+        renderList(favs.recipe, reEl, 'recipe');
     }
     function addFavorite() {
         const type = document.getElementById('favType').value;
         const category = document.getElementById('favCategory').value;
         const name = document.getElementById('favName').value.trim();
         const url = document.getElementById('favUrl').value.trim();
-        if (!name || !url) { alert('请填写名称和链接'); return; }
+        if (!name) { showToast('请填写名称'); return; }
+        if (!url) { showToast('请填写链接地址'); return; }
         const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
-        favs[category].push({ type, name, url });
+        favs[category].push({ type, category, name, url });
         DataStore.set('favorites', favs);
         document.getElementById('favName').value = '';
         document.getElementById('favUrl').value = '';
         renderFavorites();
+        showToast('收藏成功 ✨');
     }
     function deleteFav(category, idx) {
         const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
+        if (!favs[category] || !favs[category][idx]) return;
         favs[category].splice(idx, 1);
         DataStore.set('favorites', favs);
         renderFavorites();
+        showToast('已删除');
     }
     function copyLink(url) {
-        navigator.clipboard.writeText(url).then(() => alert('链接已复制到剪贴板'));
+        // 先用现代 API，失败 fallback
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(
+                () => showToast('链接已复制 ✅\n请粘贴到 ' + (lastFavType === 'xhs' ? '小红书' : '抖音') + ' 打开'),
+                () => fallbackCopy(url)
+            );
+        } else {
+            fallbackCopy(url);
+        }
+    }
+    function fallbackCopy(url) {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            showToast('链接已复制 ✅');
+        } catch (e) {
+            showToast('复制失败，请长按链接手动复制');
+        }
+        document.body.removeChild(ta);
+    }
+    let lastFavType = 'xhs';
+    function openFav(type, url) {
+        lastFavType = type;
+        // iOS Safari 直接打开 scheme 可能被拦截，这里用三种策略：
+        // 1. 直接新窗口打开（用 _blank 让浏览器/App 处理）
+        // 2. 复制到剪贴板并提示，引导用户手动去对应 App 粘贴
+        const platform = type === 'xhs' ? '小红书' : '抖音';
+        const proceed = confirm(
+            `📱 跳转到 ${platform}\n\n` +
+            `由于 iOS 平台限制，无法直接打开 App 到原贴。\n\n` +
+            `✅ 已自动复制链接到剪贴板\n` +
+            `👉 请手动打开「${platform}」APP → 粘贴访问\n\n` +
+            `也可以直接点"是"尝试用浏览器打开链接`
+        );
+        if (proceed) {
+            // 同步复制 + 打开新窗口
+            try {
+                if (navigator.clipboard) navigator.clipboard.writeText(url);
+            } catch(e){}
+            window.open(url, '_blank');
+        } else {
+            try {
+                if (navigator.clipboard) navigator.clipboard.writeText(url);
+            } catch(e){}
+            showToast('链接已复制 ✅\n打开 ' + platform + ' 粘贴访问');
+        }
+    }
+
+    // 轻量 Toast 提示
+    function showToast(msg) {
+        let t = document.getElementById('globalToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'globalToast';
+            t.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);'+
+                'background:rgba(50,30,40,0.92);color:white;padding:12px 22px;border-radius:12px;'+
+                'font-size:14px;line-height:1.5;text-align:center;z-index:99999;'+
+                'max-width:80%;box-shadow:0 6px 24px rgba(0,0,0,0.25);white-space:pre-line;'+
+                'opacity:0;transition:opacity 0.25s;pointer-events:none;';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.opacity = '1';
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => { t.style.opacity = '0'; }, 2200);
     }
 
     // ==================== 日程日历（月视图标签平铺） ====================
