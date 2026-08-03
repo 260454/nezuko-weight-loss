@@ -2066,9 +2066,9 @@
                 return `
                 <div class="fav-item">
                     <span class="fav-badge ${badgeClass}">${platformLabel}</span>
-                    <a class="fav-link" href="${safeUrl}" target="_blank" rel="noopener" title="${safeUrl}">${safeName}</a>
+                    <a class="fav-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer" title="${safeUrl}">${safeName}</a>
                     <div class="fav-actions">
-                        <a class="fav-btn open" href="${safeUrl}" target="_blank" rel="noopener">打开</a>
+                        <a class="fav-btn open" href="${safeUrl}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">打开</a>
                         <button class="fav-btn copy" onclick="copyLink('${safeUrl}','${f.type}')">复制</button>
                         <button class="fav-btn del" onclick="deleteFav('${categoryName}', ${i})">删除</button>
                     </div>
