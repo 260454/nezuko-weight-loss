@@ -409,9 +409,11 @@
             margin-left: auto;
         }
         .fav-btn {
+            display: inline-flex; align-items: center; justify-content: center;
             padding: 6px 12px; border: none;
             border-radius: 8px; font-size: 12px;
             cursor: pointer; font-weight: 600;
+            text-decoration: none;
             white-space: nowrap;
         }
         .fav-btn.copy {
@@ -2064,9 +2066,9 @@
                 return `
                 <div class="fav-item">
                     <span class="fav-badge ${badgeClass}">${platformLabel}</span>
-                    <a class="fav-link" title="${safeUrl}" onclick="openFav('${f.type}','${safeUrl}','${safeName}')">${safeName}</a>
+                    <a class="fav-link" href="${safeUrl}" target="_blank" rel="noopener" title="${safeUrl}">${safeName}</a>
                     <div class="fav-actions">
-                        <button class="fav-btn open" onclick="openFav('${f.type}','${safeUrl}','${safeName}')">打开</button>
+                        <a class="fav-btn open" href="${safeUrl}" target="_blank" rel="noopener">打开</a>
                         <button class="fav-btn copy" onclick="copyLink('${safeUrl}','${f.type}')">复制</button>
                         <button class="fav-btn del" onclick="deleteFav('${categoryName}', ${i})">删除</button>
                     </div>
