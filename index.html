@@ -1169,11 +1169,11 @@
                     <input type="text" class="input-field" id="favName" placeholder="名称（如：帕梅拉燃脂）">
                 </div>
                 <div class="input-group">
-                    <input type="text" class="input-field" id="favUrl" placeholder="粘贴链接地址...">
+                    <input type="text" class="input-field" id="favUrl" placeholder="在小红书/抖音App内 → 分享 → 复制链接 → 回到这里整段粘贴（会自动提取链接）">
                     <button class="btn btn-primary" onclick="addFavorite()">收藏</button>
                 </div>
                 <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.5;">
-                    💡 在App内分享时选「复制链接」，把短链（如 xhslink.com / v.douyin.com）粘贴到下方。点击「打开」会通过官方跳转页唤起App
+                    💡 小红书/抖音「复制链接」得到的是一整段分享文案（含标题和链接），直接粘贴到这里即可，我们会自动提取出短链
                 </div>
             </div>
 
@@ -2079,13 +2079,35 @@
         renderList(favs.exercise, exEl, 'exercise');
         renderList(favs.recipe, reEl, 'recipe');
     }
+    // ========== 从分享文案提取纯URL ==========
+    // 小红书「复制链接」实际复制的是整段分享文案（含标题、emoji、短链），不是纯URL
+    // 如：44 帕梅拉发布了一篇小红书笔记...😆 http://xhslink.com/a/xxxxx,复制本条信息...
+    function extractUrl(raw) {
+        if (!raw) return '';
+        // 如果已经是纯URL，直接返回
+        if (/^https?:\/\/[^\s]+$/.test(raw.trim()) && raw.trim().indexOf(' ') === -1) {
+            return raw.trim();
+        }
+        // 从文本中提取URL：匹配 http(s):// 开头到第一个非URL字符（中文、逗号、空格、emoji等）
+        const m = raw.match(/https?:\/\/[a-zA-Z0-9./?=_%#@+\-&!~:]+/);
+        if (m) return m[0];
+        // 没找到URL但输入了东西，原样返回（可能是用户自己打的其他网址）
+        return raw.trim();
+    }
     function addFavorite() {
         const type = document.getElementById('favType').value;
         const category = document.getElementById('favCategory').value;
         const name = document.getElementById('favName').value.trim();
-        const url = document.getElementById('favUrl').value.trim();
+        const rawUrl = document.getElementById('favUrl').value.trim();
         if (!name) { showToast('请填写名称'); return; }
-        if (!url) { showToast('请填写链接地址'); return; }
+        if (!rawUrl) { showToast('请粘贴链接地址\\n在小红书/抖音App内→分享→复制链接→回到这里粘贴'); return; }
+        // 自动从分享文案中提取纯URL
+        const url = extractUrl(rawUrl);
+        if (url !== rawUrl) {
+            // 从整段文案中成功提取了URL，更新输入框显示提取结果
+            document.getElementById('favUrl').value = url;
+            showToast('已自动识别链接 ✅\\n下次粘贴后如果看到链接自动变短\\n说明识别成功～');
+        }
         const favs = DataStore.get('favorites', { exercise: [], recipe: [] });
         favs[category].push({ type, category, name, url });
         DataStore.set('favorites', favs);
