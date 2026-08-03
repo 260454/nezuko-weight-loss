@@ -2059,7 +2059,8 @@
                 return;
             }
             el.innerHTML = list.map((f, i) => {
-                const safeUrl = escAttr(f.url);
+                const cleanUrl = extractUrl(f.url);
+                const safeUrl = escAttr(cleanUrl);
                 const safeName = escAttr(f.name);
                 const platformLabel = f.type === 'xhs' ? '小红书' : (f.type === 'douyin' ? '抖音' : '链接');
                 const badgeClass = f.type === 'xhs' ? 'badge-xhs' : 'badge-douyin';
